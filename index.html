@@ -4,598 +4,291 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Football Career RPG</title>
-
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          colors: {
-            brand: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' }
-          }
+          colors: { brand: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' } }
         }
       }
     }
   </script>
-
-  <!-- React & Babel CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-12">
 
-  <div id="root"></div>
+  <div id="app" class="max-w-4xl mx-auto p-4 md:p-6"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
+  <script>
     const POSITIONS = ['BU', 'AG', 'AD', 'MOC', 'MC', 'MDC', 'DC', 'DD', 'DG', 'GK'];
-
     const POPULAR_CLUBS = [
-      'FC Girondins de Bordeaux',
-      'Paris Saint-Germain',
-      'Olympique de Marseille',
-      'Olympique Lyonnais',
-      'Real Madrid',
-      'FC Barcelone',
-      'Arsenal',
-      'Manchester United',
-      'Bayern Munich'
+      'FC Girondins de Bordeaux', 'Paris Saint-Germain', 'Olympique de Marseille',
+      'Olympique Lyonnais', 'Real Madrid', 'FC Barcelone', 'Arsenal', 'Manchester United', 'Bayern Munich'
     ];
 
-    // Pool de clubs formateurs avec objectifs chiffrés et note moyenne exigiée
     const ACADEMY_POOL = [
-      {
-        id: 'bacalan',
-        club: 'FC Bacalan U15',
-        division: 'Régional 1',
-        salary: 120,
-        coach: { name: 'Marc Vasseur', style: 'Gegenpressing (Intense)', trust: 50 },
-        expectations: 'Exige une condition physique irréprochable et un pressing haut constant.',
-        targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 }
-      },
-      {
-        id: 'pessac',
-        club: 'US Pessac U15',
-        division: 'Régional 2',
-        salary: 95,
-        coach: { name: 'Antoine Morel', style: 'Jeu de Possession / Tiki-Taka', trust: 60 },
-        expectations: 'Recherche la précision technique et la discipline tactique sans perte de balle.',
-        targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 }
-      },
-      {
-        id: 'girondins_b',
-        club: 'Girondins B (U15)',
-        division: 'National U15',
-        salary: 220,
-        coach: { name: 'Laurent Blanc', style: 'Contre-Attaque Rapide', trust: 40 },
-        expectations: 'Très exigeant. Place les joueurs au mérite et baisse la confiance au moindre écart.',
-        targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 }
-      },
-      {
-        id: 'merignac',
-        club: 'SA Mérignac U15',
-        division: 'Régional 1',
-        salary: 130,
-        coach: { name: 'Christophe Galtier', style: 'Bloc Bas & Discipline', trust: 55 },
-        expectations: 'Met l\'accent sur la rigueur défensive et le respect strict du schéma tactique.',
-        targets: { field: { goals: 8, assists: 6 }, gk: { cleanSheets: 10 }, minRating: 6.7 }
-      },
-      {
-        id: 'stade_bordelais',
-        club: 'Stade Bordelais U15',
-        division: 'National U15',
-        salary: 180,
-        coach: { name: 'Franck Haise', style: 'Jeu Direct & Transition', trust: 45 },
-        expectations: 'Valorise la rapidité de projection vers l\'avant et le dépassement de soi.',
-        targets: { field: { goals: 12, assists: 7 }, gk: { cleanSheets: 9 }, minRating: 7.0 }
-      },
-      {
-        id: 'libourne',
-        club: 'FC Libourne U15',
-        division: 'Régional 2',
-        salary: 85,
-        coach: { name: 'Julien Stéphan', style: 'Jeu de Position Équilibré', trust: 65 },
-        expectations: 'Donne de la liberté d\'initiative aux jeunes joueurs motivés.',
-        targets: { field: { goals: 5, assists: 5 }, gk: { cleanSheets: 5 }, minRating: 6.3 }
-      },
-      {
-        id: 'lormont',
-        club: 'US Lormont U15',
-        division: 'Régional 3',
-        salary: 75,
-        coach: { name: 'Karim Benchrif', style: 'Impact Physique & Duel', trust: 70 },
-        expectations: 'Privilégie le combat physique et la solidarity d\'équipe dans l\'effort.',
-        targets: { field: { goals: 5, assists: 3 }, gk: { cleanSheets: 4 }, minRating: 6.2 }
-      }
+      { id: 'bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, coach: { name: 'Marc Vasseur', style: 'Gegenpressing (Intense)', trust: 50 }, expectations: 'Exige une condition physique irréprochable et un pressing haut constant.', targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 } },
+      { id: 'pessac', club: 'US Pessac U15', division: 'Régional 2', salary: 95, coach: { name: 'Antoine Morel', style: 'Jeu de Possession / Tiki-Taka', trust: 60 }, expectations: 'Recherche la précision technique et la discipline tactique sans perte de balle.', targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 } },
+      { id: 'girondins_b', club: 'Girondins B (U15)', division: 'National U15', salary: 220, coach: { name: 'Laurent Blanc', style: 'Contre-Attaque Rapide', trust: 40 }, expectations: 'Très exigeant. Place les joueurs au mérite et baisse la confiance au moindre écart.', targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 } },
+      { id: 'merignac', club: 'SA Mérignac U15', division: 'Régional 1', salary: 130, coach: { name: 'Christophe Galtier', style: 'Bloc Bas & Discipline', trust: 55 }, expectations: 'Met l\'accent sur la rigueur défensive et le respect strict du schéma tactique.', targets: { field: { goals: 8, assists: 6 }, gk: { cleanSheets: 10 }, minRating: 6.7 } },
+      { id: 'stade_bordelais', club: 'Stade Bordelais U15', division: 'National U15', salary: 180, coach: { name: 'Franck Haise', style: 'Jeu Direct & Transition', trust: 45 }, expectations: 'Valorise la rapidité de projection vers l\'avant et le dépassement de soi.', targets: { field: { goals: 12, assists: 7 }, gk: { cleanSheets: 9 }, minRating: 7.0 } },
+      { id: 'libourne', club: 'FC Libourne U15', division: 'Régional 2', salary: 85, coach: { name: 'Julien Stéphan', style: 'Jeu de Position Équilibré', trust: 65 }, expectations: 'Donne de la liberté d\'initiative aux jeunes joueurs motivés.', targets: { field: { goals: 5, assists: 5 }, gk: { cleanSheets: 5 }, minRating: 6.3 } },
+      { id: 'lormont', club: 'US Lormont U15', division: 'Régional 3', salary: 75, coach: { name: 'Karim Benchrif', style: 'Impact Physique & Duel', trust: 70 }, expectations: 'Privilégie le combat physique et la solidarité d\'équipe dans l\'effort.', targets: { field: { goals: 5, assists: 3 }, gk: { cleanSheets: 4 }, minRating: 6.2 } }
     ];
+
+    // État global
+    let state = {
+      step: 1,
+      player: JSON.parse(localStorage.getItem('career_rpg_save')) || null,
+      form: { firstName: 'Brandon', lastName: 'Le Moan', position: 'BU', favouriteClub: 'FC Girondins de Bordeaux', customClub: '' },
+      availableOffers: [],
+      selectedOffer: null,
+      weekLogs: []
+    };
 
     function generateOffers() {
       const shuffled = [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
-      const offerCount = Math.floor(Math.random() * 3) + 4; // Génère entre 4 et 6 offres
-      return shuffled.slice(0, offerCount);
+      const count = Math.floor(Math.random() * 3) + 4; // 4 à 6 offres
+      return shuffled.slice(0, count);
     }
 
-    function App() {
-      const [player, setPlayer] = useState(() => {
-        const saved = localStorage.getItem('career_rpg_save');
-        return saved ? JSON.parse(saved) : null;
-      });
+    function render() {
+      const app = document.getElementById('app');
 
-      const [step, setStep] = useState(1);
-      const [form, setForm] = useState({
-        firstName: 'Brandon',
-        lastName: 'Le Moan',
-        position: 'BU',
-        favouriteClub: 'FC Girondins de Bordeaux',
-        customClub: ''
-      });
+      if (!state.player) {
+        if (state.step === 1) {
+          app.innerHTML = `
+            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+              <h1 class="text-2xl font-black text-center text-brand-500 uppercase mb-1">Création du Joueur</h1>
+              <p class="text-xs text-center text-slate-400 mb-6">Débutez votre histoire à 14 ans</p>
 
-      const [availableOffers, setAvailableOffers] = useState([]);
-      const [selectedOffer, setSelectedOffer] = useState(null);
-      const [weekLogs, setWeekLogs] = useState([]);
-
-      const goToStep2 = () => {
-        const offers = generateOffers();
-        setAvailableOffers(offers);
-        setSelectedOffer(offers[0]);
-        setStep(2);
-      };
-
-      useEffect(() => {
-        if (player) {
-          localStorage.setItem('career_rpg_save', JSON.stringify(player));
-        }
-      }, [player]);
-
-      const handleStartCareer = () => {
-        if (!selectedOffer) return;
-
-        const isGK = form.position === 'GK';
-        const baseStats = isGK ? {
-          diving: 55, handling: 52, kicking: 50, reflexes: 58, speed: 42, positioning: 54
-        } : {
-          pace: 58, shooting: 54, passing: 52, dribbling: 56, defending: 40, physical: 50
-        };
-
-        const targetClub = form.customClub.trim() !== '' ? form.customClub.trim() : form.favouriteClub;
-
-        const newPlayer = {
-          identity: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            age: 14,
-            position: form.position,
-            favouriteClub: targetClub
-          },
-          stats: baseStats,
-          status: {
-            overall: 52,
-            energy: 100,
-            moral: 85,
-            week: 1,
-            season: 1,
-            averageRating: 6.5
-          },
-          contract: {
-            club: selectedOffer.club,
-            division: selectedOffer.division,
-            weeklySalary: selectedOffer.salary,
-            coachName: selectedOffer.coach.name,
-            coachStyle: selectedOffer.coach.style,
-            coachTrust: selectedOffer.coach.trust,
-            expectations: selectedOffer.expectations,
-            targets: selectedOffer.targets
-          },
-          finances: { balance: 350 },
-          history: { matchs: 0, goals: 0, assists: 0, cleanSheets: 0 }
-        };
-
-        setPlayer(newPlayer);
-        setWeekLogs([
-          `Saison 1 - Signature officielle au ${selectedOffer.club}. Entraîneur : ${selectedOffer.coach.name}.`,
-          `🎯 Objectif : Note moyenne exigée de ${selectedOffer.targets.minRating}/10.`
-        ]);
-      };
-
-      const nextWeek = () => {
-        if (!player) return;
-
-        setPlayer(prev => {
-          let updated = { ...prev };
-          let logs = [];
-
-          // Salaire
-          updated.finances.balance += updated.contract.weeklySalary;
-          updated.status.energy = Math.min(100, updated.status.energy + 15);
-
-          // Simulation match
-          const rand = Math.random();
-          updated.history.matchs += 1;
-
-          // Note du match simulée
-          const matchRating = (Math.random() * 3 + 5.5).toFixed(1);
-          const currentAvg = parseFloat(updated.status.averageRating);
-          updated.status.averageRating = ((currentAvg * (updated.history.matchs - 1) + parseFloat(matchRating)) / updated.history.matchs).toFixed(1);
-
-          if (updated.identity.position === 'GK') {
-            if (rand > 0.5) {
-              updated.history.cleanSheets += 1;
-              updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 3);
-              logs.push(`🧤 Match (${matchRating}/10) : Clean Sheet ! L'entraîneur félicite vos réflexes.`);
-            } else {
-              logs.push(`⚽ Match (${matchRating}/10) : Buts encaissés.`);
-            }
-          } else {
-            if (rand > 0.6) {
-              updated.history.goals += 1;
-              updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 4);
-              logs.push(`⚽ Match (${matchRating}/10) : But inscrit !`);
-            } else if (rand > 0.35) {
-              updated.history.assists += 1;
-              updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 2);
-              logs.push(`👟 Match (${matchRating}/10) : Passe décisive distribuée !`);
-            } else {
-              logs.push(`🏃 Match (${matchRating}/10) : Solide prestation collective.`);
-            }
-          }
-
-          let newWeek = updated.status.week + 1;
-          let newSeason = updated.status.season;
-          let newAge = updated.identity.age;
-
-          if (newWeek > 52) {
-            newWeek = 1;
-            newSeason += 1;
-            newAge += 1;
-            logs.push(`🎆 Fin de saison ${newSeason - 1} ! Vos résultats sont enregistrés.`);
-          }
-
-          updated.status.week = newWeek;
-          updated.status.season = newSeason;
-          updated.identity.age = newAge;
-
-          setWeekLogs(prev => [logs.join(" | "), ...prev.slice(0, 12)]);
-          return updated;
-        });
-      };
-
-      const resetCareer = () => {
-        if (confirm("Voulez-vous vraiment réinitialiser votre carrière ?")) {
-          localStorage.removeItem('career_rpg_save');
-          setPlayer(null);
-          setStep(1);
-        }
-      };
-
-      // --- CRÉATION JOUEUR ---
-      if (!player) {
-        const isGKForm = form.position === 'GK';
-
-        return (
-          <div className="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-            <h1 className="text-2xl font-black text-center text-brand-500 uppercase tracking-wide mb-1">
-              Création du Joueur
-            </h1>
-            <p className="text-xs text-center text-slate-400 mb-6">Débutez votre histoire à 14 ans</p>
-
-            {step === 1 && (
-              <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-3">
+              <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 uppercase">Prénom</label>
-                    <input
-                      type="text"
-                      value={form.firstName}
-                      onChange={e => setForm({...form, firstName: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
-                    />
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Prénom</label>
+                    <input id="inp-fn" type="text" value="${state.form.firstName}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"/>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 uppercase">Nom</label>
-                    <input
-                      type="text"
-                      value={form.lastName}
-                      onChange={e => setForm({...form, lastName: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
-                    />
+                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Nom</label>
+                    <input id="inp-ln" type="text" value="${state.form.lastName}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"/>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2 uppercase">Poste sur le terrain</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {POSITIONS.map(pos => (
-                      <button
-                        key={pos}
-                        onClick={() => setForm({...form, position: pos})}
-                        className={`p-3 rounded-lg border text-xs font-bold transition ${
-                          form.position === pos ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        {pos}
-                      </button>
-                    ))}
+                  <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Poste</label>
+                  <div class="grid grid-cols-5 gap-2">
+                    ${POSITIONS.map(p => `
+                      <button onclick="setPos('${p}')" class="p-3 rounded-lg border text-xs font-bold ${state.form.position === p ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800 text-slate-400'}">${p}</button>
+                    `).join('')}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 uppercase">Club de Cœur (Rêve ultime)</label>
-                  <select
-                    value={form.favouriteClub}
-                    onChange={e => setForm({...form, favouriteClub: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 focus:border-brand-500 focus:outline-none mb-2"
-                  >
-                    {POPULAR_CLUBS.map(club => (
-                      <option key={club} value={club}>{club}</option>
-                    ))}
+                  <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Club de cœur</label>
+                  <select id="sel-club" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 mb-2">
+                    ${POPULAR_CLUBS.map(c => `<option value="${c}" ${state.form.favouriteClub === c ? 'selected' : ''}>${c}</option>`).join('')}
                   </select>
-                  <input
-                    type="text"
-                    placeholder="Ou saisissez un autre club..."
-                    value={form.customClub}
-                    onChange={e => setForm({...form, customClub: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400 focus:border-brand-500 focus:outline-none"
-                  />
+                  <input id="inp-custom" type="text" placeholder="Ou autre club..." value="${state.form.customClub}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400"/>
                 </div>
 
-                <button
-                  onClick={goToStep2}
-                  className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl transition text-sm uppercase"
-                >
-                  Voir les propositions de contrats ▶
-                </button>
+                <button onclick="goToStep2()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-sm uppercase">Voir les offres (4 à 6) ▶</button>
               </div>
-            )}
+            </div>
+          `;
+        } else {
+          const isGK = state.form.position === 'GK';
+          app.innerHTML = `
+            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+              <div class="flex justify-between items-center mb-4">
+                <div class="text-xs text-slate-400 uppercase font-bold">Propositions de contrats (${state.availableOffers.length})</div>
+                <button onclick="refreshOffers()" class="text-[10px] text-brand-500 uppercase font-semibold">🔄 Régénérer</button>
+              </div>
 
-            {step === 2 && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="text-xs text-slate-400 uppercase font-bold">
-                    Propositions de contrats reçues ({availableOffers.length})
-                  </div>
-                  <button 
-                    onClick={goToStep2} 
-                    className="text-[10px] text-brand-500 hover:underline uppercase font-semibold"
-                  >
-                    🔄 Générer d'autres offres
-                  </button>
-                </div>
-
-                <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                  {availableOffers.map(offer => (
-                    <div
-                      key={offer.id}
-                      onClick={() => setSelectedOffer(offer)}
-                      className={`p-4 rounded-xl border cursor-pointer transition ${
-                        selectedOffer && selectedOffer.id === offer.id 
-                          ? 'bg-brand-500/10 border-brand-500' 
-                          : 'bg-slate-950 border-slate-800'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="font-extrabold text-base text-slate-100">{offer.club}</div>
-                          <div className="text-xs text-slate-400">{offer.division}</div>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-black text-brand-500">{offer.salary} €</span>
-                          <div className="text-[10px] text-slate-500">/ semaine</div>
-                        </div>
+              <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                ${state.availableOffers.map(o => `
+                  <div onclick="selectOffer('${o.id}')" class="p-4 rounded-xl border cursor-pointer transition ${state.selectedOffer && state.selectedOffer.id === o.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'}">
+                    <div class="flex justify-between items-start mb-2">
+                      <div>
+                        <div class="font-extrabold text-slate-100">${o.club}</div>
+                        <div class="text-xs text-slate-400">${o.division}</div>
                       </div>
+                      <div class="text-right">
+                        <span class="text-sm font-black text-brand-500">${o.salary} €</span>
+                        <div class="text-[10px] text-slate-500">/ sem</div>
+                      </div>
+                    </div>
 
-                      <div className="border-t border-slate-800/80 pt-2 mt-2 space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Entraîneur :</span>
-                          <span className="font-semibold text-slate-200">{offer.coach.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Style Tactique :</span>
-                          <span className="font-semibold text-amber-400">{offer.coach.style}</span>
-                        </div>
+                    <div class="border-t border-slate-800 pt-2 text-xs space-y-1.5">
+                      <div class="flex justify-between"><span class="text-slate-400">Coach :</span><span class="text-slate-200">${o.coach.name}</span></div>
+                      <div class="flex justify-between"><span class="text-slate-400">Tactique :</span><span class="text-amber-400">${o.coach.style}</span></div>
 
-                        {/* Attentes & Objectifs du Club */}
-                        <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800/80 space-y-1.5">
-                          <div className="text-[11px] text-slate-300 font-bold uppercase tracking-wide">
-                            🎯 Objectifs de la saison :
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-[11px]">
-                            {isGKForm ? (
-                              <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
-                                <span className="text-slate-400 block text-[9px] uppercase">Matchs sans but</span>
-                                <strong className="text-emerald-400">{offer.targets.gk.cleanSheets} Clean Sheets</strong>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
-                                  <span className="text-slate-400 block text-[9px] uppercase">Buts attendus</span>
-                                  <strong className="text-emerald-400">{offer.targets.field.goals} buts</strong>
-                                </div>
-                                <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
-                                  <span className="text-slate-400 block text-[9px] uppercase">Passes décisives</span>
-                                  <strong className="text-emerald-400">{offer.targets.field.assists} passes</strong>
-                                </div>
-                              </>
-                            )}
-                            <div className={`bg-slate-950 p-1.5 rounded text-center border border-slate-800 ${isGKForm ? '' : 'col-span-2'}`}>
-                              <span className="text-slate-400 block text-[9px] uppercase">Note Moyenne exigée</span>
-                              <strong className="text-amber-400">{offer.targets.minRating} / 10</strong>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-[11px] text-slate-400 italic">
-                          "{offer.expectations}"
+                      <div class="bg-slate-900 p-2.5 rounded border border-slate-800/80 space-y-1">
+                        <div class="text-[10px] font-bold text-slate-300 uppercase">🎯 Attentes du club :</div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                          ${isGK ? `
+                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Clean Sheets</span><strong class="text-emerald-400">${o.targets.gk.cleanSheets}</strong></div>
+                          ` : `
+                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Buts attendus</span><strong class="text-emerald-400">${o.targets.field.goals} buts</strong></div>
+                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Passes décisives</span><strong class="text-emerald-400">${o.targets.field.assists} passes</strong></div>
+                          `}
+                          <div class="bg-slate-950 p-1 rounded text-center ${isGK ? '' : 'col-span-2'}"><span class="text-[9px] text-slate-400 block">Note Moyenne</span><strong class="text-amber-400">${o.targets.minRating} / 10</strong></div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                `).join('')}
+              </div>
 
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => setStep(1)}
-                    className="w-1/3 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs uppercase"
-                  >
-                    ◀ Retour
-                  </button>
-                  <button
-                    onClick={handleStartCareer}
-                    className="w-2/3 py-3 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-xs uppercase"
-                  >
-                    Signer le contrat ✍️
-                  </button>
+              <div class="flex gap-2 pt-4">
+                <button onclick="state.step=1; render();" class="w-1/3 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs uppercase">◀ Retour</button>
+                <button onclick="startCareer()" class="w-2/3 py-3 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-xs uppercase">Signer ✍️</button>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        // Dashboard
+        const p = state.player;
+        const isGK = p.identity.position === 'GK';
+        app.innerHTML = `
+          <div class="space-y-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div>
+                <div class="flex items-center gap-3">
+                  <h2 class="text-2xl font-black">${p.identity.firstName} ${p.identity.lastName}</h2>
+                  <span class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-500 font-bold text-xs">${p.identity.position}</span>
+                </div>
+                <div class="text-xs text-slate-400 mt-1">${p.identity.age} ans • <strong>${p.contract.club}</strong> (${p.contract.division})</div>
+                <div class="text-xs text-rose-400 mt-1">❤️ Club de cœur : ${p.identity.favouriteClub}</div>
+              </div>
+
+              <div class="flex gap-4 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800 w-full md:w-auto justify-between">
+                <div><div class="text-slate-500 text-[10px]">SOLDE</div><div class="font-bold text-emerald-400">${p.finances.balance} €</div></div>
+                <div><div class="text-slate-500 text-[10px]">NOTE MOY.</div><div class="font-bold text-amber-400">${p.status.averageRating} / 10</div></div>
+                <div><div class="text-slate-500 text-[10px]">SAISON / SEM.</div><div class="font-bold text-brand-500">S${p.status.season} - W${p.status.week}</div></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
+                  <span>Confiance du Coach</span><span class="text-brand-500">${p.contract.coachTrust}%</span>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl text-xs space-y-1">
+                  <div>Entraîneur : <strong>${p.contract.coachName}</strong></div>
+                  <div>Style : <strong class="text-amber-400">${p.contract.coachStyle}</strong></div>
+                  <div class="text-slate-400 italic pt-1 border-t border-slate-900 mt-1">"${p.contract.expectations}"</div>
                 </div>
               </div>
-            )}
+
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2">Objectifs Saison</div>
+                <div class="bg-slate-950 p-3 rounded-xl text-xs space-y-1.5">
+                  ${isGK ? `
+                    <div class="flex justify-between"><span class="text-slate-400">Clean Sheets :</span><strong>${p.history.cleanSheets} / ${p.contract.targets.gk.cleanSheets}</strong></div>
+                  ` : `
+                    <div class="flex justify-between"><span class="text-slate-400">Buts :</span><strong>${p.history.goals} / ${p.contract.targets.field.goals}</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Passes d. :</span><strong>${p.history.assists} / ${p.contract.targets.field.assists}</strong></div>
+                  `}
+                  <div class="flex justify-between border-t border-slate-900 pt-1"><span class="text-slate-400">Note requise :</span><strong class="text-amber-400">${p.status.averageRating} / ${p.contract.targets.minRating}</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <button onclick="nextWeek()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl uppercase">Avancer à la semaine suivante ▶</button>
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-32 overflow-y-auto text-xs space-y-1">
+                ${state.weekLogs.map(l => `<div class="border-b border-slate-900 pb-1 text-slate-300">${l}</div>`).join('')}
+              </div>
+            </div>
+
+            <div class="text-center"><button onclick="resetCareer()" class="text-xs text-red-500 underline">Réinitialiser la carrière</button></div>
           </div>
-        );
+        `;
+      }
+    }
+
+    // Gestionnaires d'événements
+    function setPos(pos) { state.form.position = pos; render(); }
+    
+    function goToStep2() {
+      state.form.firstName = document.getElementById('inp-fn').value || 'Brandon';
+      state.form.lastName = document.getElementById('inp-ln').value || 'Le Moan';
+      state.form.favouriteClub = document.getElementById('sel-club').value;
+      state.form.customClub = document.getElementById('inp-custom').value;
+
+      state.availableOffers = generateOffers();
+      state.selectedOffer = state.availableOffers[0];
+      state.step = 2;
+      render();
+    }
+
+    function refreshOffers() {
+      state.availableOffers = generateOffers();
+      state.selectedOffer = state.availableOffers[0];
+      render();
+    }
+
+    function selectOffer(id) {
+      state.selectedOffer = state.availableOffers.find(o => o.id === id);
+      render();
+    }
+
+    function startCareer() {
+      const targetClub = state.form.customClub.trim() !== '' ? state.form.customClub.trim() : state.form.favouriteClub;
+      state.player = {
+        identity: { firstName: state.form.firstName, lastName: state.form.lastName, age: 14, position: state.form.position, favouriteClub: targetClub },
+        status: { overall: 52, week: 1, season: 1, averageRating: 6.5 },
+        contract: { club: state.selectedOffer.club, division: state.selectedOffer.division, salary: state.selectedOffer.salary, coachName: state.selectedOffer.coach.name, coachStyle: state.selectedOffer.coach.style, coachTrust: state.selectedOffer.coach.trust, expectations: state.selectedOffer.expectations, targets: state.selectedOffer.targets },
+        finances: { balance: 350 },
+        history: { matchs: 0, goals: 0, assists: 0, cleanSheets: 0 }
+      };
+      localStorage.setItem('career_rpg_save', JSON.stringify(state.player));
+      state.weekLogs = [`Signature au ${state.selectedOffer.club}. Note requise : ${state.selectedOffer.targets.minRating}/10.`];
+      render();
+    }
+
+    function nextWeek() {
+      const p = state.player;
+      p.finances.balance += p.contract.salary;
+      p.history.matchs += 1;
+
+      const rating = (Math.random() * 3 + 5.5).toFixed(1);
+      p.status.averageRating = ((parseFloat(p.status.averageRating) * (p.history.matchs - 1) + parseFloat(rating)) / p.history.matchs).toFixed(1);
+
+      let log = `Match (${rating}/10) : `;
+      if (p.identity.position === 'GK') {
+        if (Math.random() > 0.5) { p.history.cleanSheets += 1; log += "Clean Sheet !"; } else { log += "Buts encaissés."; }
+      } else {
+        const r = Math.random();
+        if (r > 0.6) { p.history.goals += 1; log += "⚽ But marqué !"; }
+        else if (r > 0.35) { p.history.assists += 1; log += "👟 Passe décisive !"; }
+        else { log += "Prestation correcte."; }
       }
 
-      // --- TABLEAU DE BORD PRINCIPAL ---
-      const isGK = player.identity.position === 'GK';
+      p.status.week += 1;
+      if (p.status.week > 52) { p.status.week = 1; p.status.season += 1; p.identity.age += 1; }
 
-      return (
-        <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
-          {/* En-tête profil */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-black text-slate-100">{player.identity.firstName} {player.identity.lastName}</h2>
-                <span className="px-2.5 py-0.5 rounded bg-brand-500/20 text-brand-500 font-bold text-xs border border-brand-500/30">
-                  {player.identity.position}
-                </span>
-              </div>
-              <div className="text-xs text-slate-400 mt-1">
-                {player.identity.age} ans • <span className="text-slate-200 font-semibold">{player.contract.club}</span> ({player.contract.division})
-              </div>
-              <div className="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1">
-                ❤️ Club de cœur : {player.identity.favouriteClub}
-              </div>
-            </div>
-
-            <div className="flex gap-4 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800 w-full md:w-auto justify-between">
-              <div>
-                <div className="text-slate-500 uppercase text-[10px]">Solde</div>
-                <div className="font-bold text-emerald-400">{player.finances.balance} €</div>
-              </div>
-              <div>
-                <div className="text-slate-500 uppercase text-[10px]">Note Moyenne</div>
-                <div className="font-bold text-amber-400">{player.status.averageRating} / 10</div>
-              </div>
-              <div>
-                <div className="text-slate-500 uppercase text-[10px]">Saison / Sem.</div>
-                <div className="font-bold text-brand-500">S{player.status.season} - W{player.status.week}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Relation Entraîneur & Objectifs Saison */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <div className="text-xs font-bold text-slate-400 uppercase flex justify-between items-center">
-                <span>Relation avec le Staff</span>
-                <span className="text-brand-500 font-bold">{player.contract.coachTrust} %</span>
-              </div>
-
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-1">
-                <div><span className="text-slate-500">Entraîneur :</span> <strong className="text-slate-200">{player.contract.coachName}</strong></div>
-                <div><span className="text-slate-500">Style Tactique :</span> <strong className="text-amber-400">{player.contract.coachStyle}</strong></div>
-                <div className="text-slate-400 italic pt-1 border-t border-slate-900 mt-2">"{player.contract.expectations}"</div>
-              </div>
-            </div>
-
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <div className="text-xs font-bold text-slate-400 uppercase">Objectifs de la Saison</div>
-              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-2">
-                {isGK ? (
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400">Matchs sans but (Clean Sheets)</span>
-                    <span className="font-bold text-slate-200">{player.history.cleanSheets} / {player.contract.targets.gk.cleanSheets}</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Buts à marquer</span>
-                      <span className="font-bold text-slate-200">{player.history.goals} / {player.contract.targets.field.goals}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Passes décisives</span>
-                      <span className="font-bold text-slate-200">{player.history.assists} / {player.contract.targets.field.assists}</span>
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-between items-center border-t border-slate-900 pt-2">
-                  <span className="text-slate-400">Note moyenne requise</span>
-                  <span className="font-bold text-amber-400">{player.status.averageRating} / {player.contract.targets.minRating}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions & Progression */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <h3 className="text-xs font-bold uppercase text-slate-400">Bilan Carrière</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between border-b border-slate-800 pb-1.5">
-                  <span className="text-slate-400">Matchs joués</span>
-                  <span className="font-bold">{player.history.matchs}</span>
-                </div>
-                {isGK ? (
-                  <div className="flex justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-slate-400">Clean Sheets</span>
-                    <span className="font-bold text-emerald-400">{player.history.cleanSheets}</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between border-b border-slate-800 pb-1.5">
-                      <span className="text-slate-400">Buts</span>
-                      <span className="font-bold text-emerald-400">{player.history.goals}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-slate-800 pb-1.5">
-                      <span className="text-slate-400">Passes décisives</span>
-                      <span className="font-bold text-emerald-400">{player.history.assists}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:col-span-2 space-y-4 flex flex-col justify-between">
-              <button
-                onClick={nextWeek}
-                className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl transition text-base uppercase"
-              >
-                Avancer à la semaine suivante ▶
-              </button>
-
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 h-36 overflow-y-auto space-y-1.5">
-                <div className="text-[10px] font-bold text-slate-500 uppercase">Journal du Club</div>
-                {weekLogs.map((log, idx) => (
-                  <div key={idx} className="text-xs text-slate-300 border-b border-slate-900 pb-1">
-                    {log}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center pt-4">
-            <button onClick={resetCareer} className="text-xs text-red-500 underline opacity-70 hover:opacity-100">
-              Réinitialiser la carrière
-            </button>
-          </div>
-        </div>
-      );
+      localStorage.setItem('career_rpg_save', JSON.stringify(p));
+      state.weekLogs.unshift(`S${p.status.season} W${p.status.week} - ${log}`);
+      render();
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    function resetCareer() {
+      if (confirm("Réinitialiser la carrière ?")) {
+        localStorage.removeItem('career_rpg_save');
+        state.player = null;
+        state.step = 1;
+        render();
+      }
+    }
+
+    // Premier rendu
+    render();
   </script>
 </body>
 </html>
+
 
 
