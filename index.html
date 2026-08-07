@@ -1,507 +1,730 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Football Career RPG - Dynastie</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pro Football Career</title>
+  <!-- Google Fonts: Titillium Web & Montserrat pour un look sportif style FC/FUT -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Titillium+Web:wght@600;700;900&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' }
-          }
-        }
-      }
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --card-bg: #121927;
+      --accent-gold: #f3c623;
+      --accent-green: #10b981;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.1);
     }
-  </script>
 
-  <!-- React & Babel CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      padding-bottom: 24px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* En-tête */
+    header {
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    header h1 {
+      font-family: 'Titillium Web', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* --- ÉCRAN DE CRÉATION DE JOUEUR --- */
+    .setup-screen {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    /* Grille de sélection des postes */
+    .positions-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .pos-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 4px;
+      border-radius: 8px;
+      font-family: 'Titillium Web', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .pos-btn.selected {
+      background: var(--accent-gold);
+      color: #000;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(243, 198, 35, 0.4);
+    }
+
+    /* --- ÉCRAN PRINCIPAL DU JEU --- */
+    .game-screen {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Carte FUT */
+    .fut-card-wrapper {
+      display: flex;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    .fut-card {
+      width: 240px;
+      height: 350px;
+      border-radius: 16px;
+      padding: 18px 14px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      transition: transform 0.3s ease, background 0.5s ease;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .fut-card.bronze {
+      background: linear-gradient(135deg, #4a3324 0%, #8c5a3c 50%, #2e1e14 100%);
+      color: #f7d8c5;
+    }
+    .fut-card.silver {
+      background: linear-gradient(135deg, #708090 0%, #c0c0c0 50%, #46525e 100%);
+      color: #ffffff;
+    }
+    .fut-card.gold {
+      background: linear-gradient(135deg, #e5a93b 0%, #fff0a8 50%, #996515 100%);
+      color: #2a1a00;
+    }
+    .fut-card.special {
+      background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #6366f1 100%);
+      color: #ffffff;
+      border-color: #a855f7;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .rating-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .rating-val {
+      font-family: 'Titillium Web', sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+    }
+
+    .position-val {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .player-avatar {
+      font-size: 64px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    }
+
+    .player-name-banner {
+      text-align: center;
+      font-family: 'Titillium Web', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-label {
+      opacity: 0.8;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-around;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.9;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 6px;
+    }
+
+    /* Panneaux */
+    .panel {
+      background-color: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .energy-bar-container {
+      width: 100%;
+      height: 12px;
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .energy-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--accent-red) 0%, var(--accent-gold) 50%, var(--accent-green) 100%);
+      transition: width 0.4s ease;
+    }
+
+    /* Actions */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 8px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-icon {
+      font-size: 18px;
+    }
+
+    .btn-cost {
+      font-size: 10px;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      grid-column: span 2;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #2563eb 100%);
+      border: none;
+      padding: 14px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-rest {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    /* Log */
+    .log-container {
+      height: 110px;
+      overflow-y: auto;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--accent-blue);
+      line-height: 1.4;
+    }
+
+    .reset-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-red);
+      font-size: 10px;
+      text-decoration: underline;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 8px;
+      opacity: 0.7;
+    }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+<body>
 
-  <div id="root"></div>
+  <div class="container">
+    <header>
+      <h1>Pro Football Career</h1>
+      <p>Simulateur de Carrière & Progression</p>
+    </header>
 
-  <script type="text/babel">
-    const { useState } = React;
+    <!-- ÉCRAN DE CRÉATION DU JOUEUR -->
+    <div class="setup-screen" id="setupScreen">
+      <div class="form-group">
+        <label for="playerNameInput">Nom du Joueur</label>
+        <input type="text" id="playerNameInput" class="form-input" placeholder="Ex: Alex Hunter" value="Alex Hunter">
+      </div>
 
-    // --- DONNÉES DES ORIGINES ---
-    const ORIGINS = [
-      { id: 'CENTRE_FORMATION', name: 'Centre de Formation', desc: '+10% Mental/Tactique | Attraction grands clubs' },
-      { id: 'CLUB_AMATEUR', name: 'Club Amateur', desc: '+10% Physique/Endurance | XP Mental +15%' },
-      { id: 'FUTSAL', name: 'Prodige Futsal', desc: '+10% Dribble/Technique | -15% Physique' },
-      { id: 'DEBUTANT_TARDIF', name: 'Débutant Tardif', desc: 'Potentiel très large (65-99) | -5 OVR départ' },
-      { id: 'STREET_FOOTBALL', name: 'Foot de Rue', desc: '+10% Agressivité/Dribble | Instinct 1v1' },
-      { id: 'ATHLETE_POLYVALENT', name: 'Athlète Polyvalent', desc: '+15% Vitesse/Puissance | Moteur Hybride' }
-    ];
+      <div class="form-group">
+        <label>Choisissez votre Poste</label>
+        <div class="positions-grid">
+          <button class="pos-btn selected" onclick="selectPosition('BU', this)">BU</button>
+          <button class="pos-btn" onclick="selectPosition('AG', this)">AG</button>
+          <button class="pos-btn" onclick="selectPosition('AD', this)">AD</button>
+          <button class="pos-btn" onclick="selectPosition('MOC', this)">MOC</button>
+          <button class="pos-btn" onclick="selectPosition('MC', this)">MC</button>
+          <button class="pos-btn" onclick="selectPosition('MDC', this)">MDC</button>
+          <button class="pos-btn" onclick="selectPosition('DC', this)">DC</button>
+          <button class="pos-btn" onclick="selectPosition('DD', this)">DD</button>
+          <button class="pos-btn" onclick="selectPosition('DG', this)">DG</button>
+          <button class="pos-btn" onclick="selectPosition('GK', this)">GK</button>
+        </div>
+      </div>
 
-    // --- OFFRES INITIALES DE DÉPART (14 ANS) ---
-    const INITIAL_OFFERS = [
-      { id: 'fc_bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, role: 'Titulaire Jeunes' },
-      { id: 'pessac_al', club: 'US Pessac U15', division: 'Régional 2', salary: 90, role: 'Cadre d\'Équipe' },
-      { id: 'bordeaux_ac', club: 'Girondins B (U15)', division: 'National U15', salary: 250, role: 'Réserviste' }
-    ];
+      <button class="btn btn-primary" style="margin-top: 10px;" onclick="createCareer()">
+        🚀 Lancer ma carrière
+      </button>
+    </div>
 
-    // --- CATALOGUE DU STAFF PRIVÉ ---
-    const STAFF_CATALOG = {
-      physicalTrainer: [
-        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Entraînement du club uniquement.' },
-        { tier: 1, name: 'Préparateur Amateur', cost: 200, minSalary: 0, reqFame: 0, minBalance: 500, desc: '-5% risque blessure, +5% récupération.' },
-        { tier: 2, name: 'Spécialiste Pro', cost: 2500, minSalary: 5000, reqFame: 0, minBalance: 0, desc: '-20% risque blessure, +20% récupération.' },
-        { tier: 3, name: 'Élite Mondial', cost: 15000, minSalary: 50000, reqFame: 70, minBalance: 0, desc: '-50% risque blessure, récupération maximale.' }
-      ],
-      tacticalTrainer: [
-        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Séances vidéo classiques.' },
-        { tier: 1, name: 'Ex-Pro Local', cost: 150, minSalary: 0, reqFame: 0, minBalance: 300, desc: '+5% XP Dribble & Tir.' },
-        { tier: 2, name: 'Analyste Dédié', cost: 1800, minSalary: 3000, reqFame: 0, minBalance: 0, desc: '+15% XP Technique ciblée.' },
-        { tier: 3, name: 'Légende Retraitée', cost: 12000, minSalary: 0, reqFame: 80, minBalance: 100000, desc: '+35% XP Technique & Gestes 5 stars.' }
-      ],
-      mentalCoach: [
-        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Gestion personnelle du stress.' },
-        { tier: 1, name: 'App / Livres de Santé', cost: 50, minSalary: 0, reqFame: 0, minBalance: 100, desc: 'Fixe le plancher de Santé Mentale à 50.' },
-        { tier: 2, name: 'Psychologue du Sport', cost: 1200, minSalary: 2000, reqFame: 0, minBalance: 0, desc: '+10 Santé Mentale automatique par semaine.' },
-        { tier: 3, name: 'Guru des Stars', cost: 8000, minSalary: 0, reqFame: 60, minBalance: 0, desc: 'Immunité aux baisses de moral lors des défaites.' }
-      ],
-      chef: [
-        { tier: 0, name: 'Repas Familiaux / Cantine', cost: 0, minSalary: 0, reqFame: 0, desc: 'Nutrition standard sans ajustement.' },
-        { tier: 1, name: 'Diététicien Sportif', cost: 1500, minSalary: 4000, reqFame: 0, minBalance: 0, desc: '+10% condition physique en fin de match.' },
-        { tier: 2, name: 'Chef Étoilé Personnel', cost: 10000, minSalary: 0, reqFame: 75, minBalance: 0, desc: '-30% fatigue cumulative, préserve le potentiel.' }
-      ]
+    <!-- ÉCRAN DU JEU MAIN -->
+    <div class="game-screen" id="gameScreen">
+      <!-- Carte FUT Dynamique -->
+      <div class="fut-card-wrapper">
+        <div class="fut-card bronze" id="futCard">
+          <div class="card-top">
+            <div class="rating-block">
+              <span class="rating-val" id="cardOvr">60</span>
+              <span class="position-val" id="cardPos">BU</span>
+            </div>
+            <div class="player-avatar" id="cardAvatar">⚽</div>
+          </div>
+
+          <div>
+            <div class="player-name-banner" id="cardName">Alex Hunter</div>
+            <div class="card-stats-grid">
+              <div class="stat-item"><span class="stat-label" id="lbl1">VIT</span><span id="stat1">60</span></div>
+              <div class="stat-item"><span class="stat-label" id="lbl2">TIR</span><span id="stat2">60</span></div>
+              <div class="stat-item"><span class="stat-label" id="lbl3">PAS</span><span id="stat3">60</span></div>
+              <div class="stat-item"><span class="stat-label" id="lbl4">DRI</span><span id="stat4">60</span></div>
+              <div class="stat-item"><span class="stat-label" id="lbl5">DEF</span><span id="stat5">40</span></div>
+              <div class="stat-item"><span class="stat-label" id="lbl6">PHY</span><span id="stat6">60</span></div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span id="cardClub">FC Bordeaux</span>
+            <span id="cardAge">16 ans</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- État physique & Statistiques -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Forme & Énergie</span>
+          <span id="energyVal" style="color: var(--accent-green);">100%</span>
+        </div>
+        <div class="energy-bar-container">
+          <div class="energy-bar-fill" id="energyBar"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px;">
+          <span>Matchs: <strong id="matchCount">0</strong></span>
+          <span id="mainStatLabel">Buts: <strong id="goalCount">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Centre d'entraînement -->
+      <div class="panel">
+        <div class="panel-title">Centre d'entraînement</div>
+        <div class="actions-grid">
+          <button class="btn btn-primary" onclick="playMatch()">
+            <span class="btn-icon">⚽</span>
+            <span>Jouer le prochain match</span>
+            <span class="btn-cost">-25% Énergie</span>
+          </button>
+
+          <button class="btn" onclick="train('offensive')">
+            <span class="btn-icon">🎯</span>
+            <span id="trainBtn1">Entraînement Attaque</span>
+            <span class="btn-cost">-15% Énergie</span>
+          </button>
+
+          <button class="btn" onclick="train('defensive')">
+            <span class="btn-icon">⚡</span>
+            <span id="trainBtn2">Entraînement Physique</span>
+            <span class="btn-cost">-15% Énergie</span>
+          </button>
+
+          <button class="btn btn-rest" onclick="rest()" style="grid-column: span 2;">
+            <span class="btn-icon">🛌</span>
+            <span>Se reposer / Récupérer</span>
+            <span class="btn-cost" style="color: var(--accent-green);">+40% Énergie</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Journal -->
+      <div class="panel">
+        <div class="panel-title">Actualités de la carrière</div>
+        <div class="log-container" id="logContainer"></div>
+      </div>
+
+      <button class="reset-btn" onclick="resetGame()">Réinitialiser la carrière</button>
+    </div>
+  </div>
+
+  <script>
+    let selectedPos = "BU";
+
+    // Profils de statistiques initiales selon le poste
+    const positionProfiles = {
+      BU:  { stats: { vit: 65, tir: 66, pas: 55, dri: 62, def: 35, phy: 60 }, avatar: "⚽" },
+      AG:  { stats: { vit: 72, tir: 62, pas: 60, dri: 68, def: 35, phy: 52 }, avatar: "⚡" },
+      AD:  { stats: { vit: 72, tir: 62, pas: 60, dri: 68, def: 35, phy: 52 }, avatar: "⚡" },
+      MOC: { stats: { vit: 64, tir: 63, pas: 68, dri: 67, def: 42, phy: 54 }, avatar: "🎩" },
+      MC:  { stats: { vit: 60, tir: 58, pas: 66, dri: 62, def: 58, phy: 62 }, avatar: "🧠" },
+      MDC: { stats: { vit: 58, tir: 48, pas: 62, dri: 56, def: 66, phy: 68 }, avatar: "🛡️" },
+      DC:  { stats: { vit: 56, tir: 35, pas: 50, dri: 48, def: 68, phy: 70 }, avatar: "🧱" },
+      DD:  { stats: { vit: 68, tir: 45, pas: 58, dri: 58, def: 62, phy: 62 }, avatar: "🏃" },
+      DG:  { stats: { vit: 68, tir: 45, pas: 58, dri: 58, def: 62, phy: 62 }, avatar: "🏃" },
+      GK:  { stats: { plongeon: 64, jeuMain: 62, degagement: 60, reflexe: 66, vitesse: 45, placement: 63 }, avatar: "🧤" }
     };
 
-    function App() {
-      const [player, setPlayer] = useState(null);
-      const [activeTab, setActiveTab] = useState('dashboard');
-      const [weekLogs, setWeekLogs] = useState([]);
+    let player = JSON.parse(localStorage.getItem('pro_career_save')) || null;
 
-      const [form, setForm] = useState({
-        firstName: 'Brandon',
-        lastName: 'Le Moan',
-        position: 'BU',
-        origin: 'CENTRE_FORMATION',
-        offerId: 'fc_bacalan'
-      });
-
-      const handleCreatePlayer = () => {
-        const selectedOffer = INITIAL_OFFERS.find(o => o.id === form.offerId);
-        const baseOvr = form.origin === 'DEBUTANT_TARDIF' ? 47 : 52;
-        const basePot = Math.floor(Math.random() * 20) + 78;
-
-        const newPlayer = {
-          identity: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            age: 14,
-            generation: 1,
-            position: form.position,
-            origin: form.origin
-          },
-          attributes: {
-            overall: baseOvr,
-            hiddenPotential: basePot,
-            stats: {
-              pace: Math.floor(Math.random() * 15) + 50,
-              shooting: Math.floor(Math.random() * 15) + 50,
-              passing: Math.floor(Math.random() * 15) + 45,
-              dribbling: Math.floor(Math.random() * 15) + 50,
-              defending: 35,
-              physical: Math.floor(Math.random() * 15) + 45
-            }
-          },
-          status: {
-            mentalHealth: 85,
-            physicalCondition: 100,
-            discipline: 75,
-            fame: 10,
-            week: 1,
-            season: 1
-          },
-          finances: {
-            balance: 500,
-            weeklySalary: selectedOffer.salary
-          },
-          contract: {
-            club: selectedOffer.club,
-            division: selectedOffer.division,
-            role: selectedOffer.role
-          },
-          privateStaff: {
-            physicalTrainer: 0,
-            tacticalTrainer: 0,
-            mentalCoach: 0,
-            chef: 0
-          },
-          rival: {
-            name: 'Enzo Rival',
-            club: 'Rival FC',
-            intensity: 40
-          }
-        };
-
-        setPlayer(newPlayer);
-        setWeekLogs([`Saison 1 - Début de carrière à 14 ans chez ${selectedOffer.club} !`]);
-      };
-
-      const nextWeek = () => {
-        if (!player) return;
-
-        setPlayer(prev => {
-          let updated = { ...prev };
-          let logs = [];
-          
-          let totalMonthlyStaffCost = 0;
-          Object.keys(updated.privateStaff).forEach(type => {
-            const tierIndex = updated.privateStaff[type];
-            totalMonthlyStaffCost += STAFF_CATALOG[type][tierIndex].cost;
-          });
-
-          let newBalance = updated.finances.balance + updated.finances.weeklySalary;
-          if (updated.status.week % 4 === 0 && totalMonthlyStaffCost > 0) {
-            newBalance -= totalMonthlyStaffCost;
-            logs.push(`💸 Prélèvement mensuel du staff privé : -${totalMonthlyStaffCost} €`);
-          }
-
-          const deltaFactor = Math.random();
-          if (deltaFactor > 0.90) {
-            logs.push("🌟 Jour de grâce ! Prestation XXL en match.");
-            updated.status.fame += 2;
-          } else if (deltaFactor < 0.15) {
-            logs.push("😓 Jour sans... Fatigue latente sur le terrain.");
-            updated.status.mentalHealth = Math.max(0, updated.status.mentalHealth - 5);
-          } else {
-            logs.push("⚽ Match solide cette semaine. Entraînement accompli.");
-          }
-
-          if (updated.privateStaff.mentalCoach === 1 && updated.status.mentalHealth < 50) {
-            updated.status.mentalHealth = 50;
-            logs.push("🧠 Le staff mental maintient votre moral au seuil minimal (50%).");
-          } else if (updated.privateStaff.mentalCoach === 2) {
-            updated.status.mentalHealth = Math.min(100, updated.status.mentalHealth + 10);
-          }
-
-          let newWeek = updated.status.week + 1;
-          let newSeason = updated.status.season;
-          let newAge = updated.identity.age;
-
-          if (newWeek > 52) {
-            newWeek = 1;
-            newSeason += 1;
-            newAge += 1;
-            const ovrGain = Math.floor(Math.random() * 3) + 2;
-            updated.attributes.overall = Math.min(updated.attributes.hiddenPotential, updated.attributes.overall + ovrGain);
-            logs.push(`🎆 FIN DE SAISON ${newSeason - 1} ! Bilan : +${ovrGain} OVR. Vous avez ${newAge} ans.`);
-          }
-
-          updated.status.week = newWeek;
-          updated.status.season = newSeason;
-          updated.identity.age = newAge;
-          updated.finances.balance = newBalance;
-
-          setWeekLogs(prevLogs => [logs.join(" | "), ...prevLogs.slice(0, 15)]);
-          return updated;
-        });
-      };
-
-      const hireStaff = (type, tierIndex) => {
-        const targetStaff = STAFF_CATALOG[type][tierIndex];
-        
-        if (player.finances.weeklySalary < targetStaff.minSalary) {
-          alert(`Salaire insuffisant (${targetStaff.minSalary}€/sem requis).`);
-          return;
-        }
-        if (player.status.fame < targetStaff.reqFame) {
-          alert(`Notoriété insuffisante (${targetStaff.reqFame} requis).`);
-          return;
-        }
-        if (targetStaff.minBalance && player.finances.balance < targetStaff.minBalance) {
-          alert(`Épargne insuffisante (${targetStaff.minBalance}€ requis).`);
-          return;
-        }
-
-        setPlayer(prev => ({
-          ...prev,
-          privateStaff: { ...prev.privateStaff, [type]: tierIndex }
-        }));
-      };
-
-      if (!player) {
-        return (
-          <div className="max-w-2xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-emerald-300">
-                Football RPG : Dynastie
-              </h1>
-              <p className="text-slate-400 text-sm mt-1">Créez votre joueur à 14 ans et écrivez votre histoire.</p>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Prénom</label>
-                  <input
-                    type="text"
-                    value={form.firstName}
-                    onChange={e => setForm({...form, firstName: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Nom</label>
-                  <input
-                    type="text"
-                    value={form.lastName}
-                    onChange={e => setForm({...form, lastName: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Poste</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['BU', 'MOC', 'AG', 'DC'].map(pos => (
-                    <button
-                      key={pos}
-                      onClick={() => setForm({...form, position: pos})}
-                      className={`p-3 rounded-lg border text-sm font-bold transition ${
-                        form.position === pos ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Origine</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {ORIGINS.map(org => (
-                    <div
-                      key={org.id}
-                      onClick={() => setForm({...form, origin: org.id})}
-                      className={`p-3 rounded-xl border cursor-pointer transition ${
-                        form.origin === org.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="font-bold text-sm text-slate-200">{org.name}</div>
-                      <div className="text-xs text-slate-400 mt-1">{org.desc}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Premier Club (14 ans)</label>
-                <div className="space-y-2">
-                  {INITIAL_OFFERS.map(offer => (
-                    <div
-                      key={offer.id}
-                      onClick={() => setForm({...form, offerId: offer.id})}
-                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
-                        form.offerId === offer.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-bold text-sm">{offer.club}</div>
-                        <div className="text-xs text-slate-400">{offer.division} • {offer.role}</div>
-                      </div>
-                      <div className="font-extrabold text-brand-500">{offer.salary} € / sem</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={handleCreatePlayer}
-                className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-slate-950 font-extrabold rounded-xl shadow-lg transition"
-              >
-                Commencer Ma Carrière (14 ans)
-              </button>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-emerald-300 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg">
-                {player.attributes.overall}
-              </div>
-              <div>
-                <h2 className="text-2xl font-black">{player.identity.firstName} {player.identity.lastName}</h2>
-                <div className="text-xs text-slate-400 flex items-center gap-2 mt-1">
-                  <span>{player.identity.age} ans</span> • 
-                  <span className="text-brand-500 font-semibold">{player.identity.position}</span> • 
-                  <span>{player.contract.club}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-6 text-sm bg-slate-950 p-4 rounded-xl border border-slate-800/80 w-full md:w-auto justify-between">
-              <div>
-                <div className="text-xs text-slate-500 uppercase">Solde</div>
-                <div className="font-bold text-emerald-400">{player.finances.balance.toLocaleString()} €</div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-500 uppercase">Salaire</div>
-                <div className="font-bold">{player.finances.weeklySalary} € / sem</div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-500 uppercase">Saison / Sem.</div>
-                <div className="font-bold text-brand-500">S{player.status.season} - W{player.status.week}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex border-b border-slate-800 gap-4 text-sm font-semibold">
-            {[
-              { id: 'dashboard', label: 'Tableau de bord' },
-              { id: 'staff', label: 'Staff Privé' },
-              { id: 'media', label: 'Médias & Rival' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 transition ${activeTab === tab.id ? 'border-b-2 border-brand-500 text-brand-500' : 'text-slate-400 hover:text-slate-200'}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === 'dashboard' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                <h3 className="text-sm font-bold uppercase text-slate-400">Attributs</h3>
-                <div className="space-y-3">
-                  {Object.entries(player.attributes.stats).map(([stat, val]) => (
-                    <div key={stat}>
-                      <div className="flex justify-between text-xs mb-1 uppercase font-semibold">
-                        <span className="text-slate-400">{stat}</span>
-                        <span>{val}</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-                        <div className="h-full bg-brand-500 rounded-full" style={{ width: `${val}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6 md:col-span-2 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-bold uppercase text-slate-400 mb-4">Forme & Mental</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                      <div className="text-xs text-slate-500 uppercase mb-1">Santé Mentale</div>
-                      <div className="text-2xl font-bold text-sky-400">{player.status.mentalHealth} %</div>
-                    </div>
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                      <div className="text-xs text-slate-500 uppercase mb-1">Condition Physique</div>
-                      <div className="text-2xl font-bold text-emerald-400">{player.status.physicalCondition} %</div>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={nextWeek}
-                  className="w-full py-4 bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-600 hover:to-emerald-700 text-slate-950 font-black rounded-xl shadow-lg transition text-lg"
-                >
-                  Avancer À La Semaine Suivante ▶
-                </button>
-
-                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 h-40 overflow-y-auto space-y-2">
-                  <div className="text-xs font-bold text-slate-500 uppercase mb-2">Derniers Événements</div>
-                  {weekLogs.map((log, idx) => (
-                    <div key={idx} className="text-xs text-slate-300 border-b border-slate-900 pb-1">
-                      {log}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'staff' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { key: 'physicalTrainer', title: 'Préparateur Physique' },
-                { key: 'tacticalTrainer', title: 'Préparateur Technique' },
-                { key: 'mentalCoach', title: 'Coach Mental' },
-                { key: 'chef', title: 'Cuisinier / Nutritionniste' }
-              ].map(group => (
-                <div key={group.key} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                  <h3 className="font-bold text-sm text-brand-500 uppercase">{group.title}</h3>
-                  <div className="space-y-3">
-                    {STAFF_CATALOG[group.key].map((item, idx) => {
-                      const isHired = player.privateStaff[group.key] === idx;
-                      return (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
-                            isHired ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'
-                          }`}
-                        >
-                          <div>
-                            <div className="font-bold text-slate-200">{item.name}</div>
-                            <div className="text-slate-400">{item.desc}</div>
-                            <div className="text-slate-500 text-[10px]">Coût : {item.cost} € / mois</div>
-                          </div>
-                          <button
-                            disabled={isHired}
-                            onClick={() => hireStaff(group.key, idx)}
-                            className={`px-3 py-2 rounded-lg font-bold ${
-                              isHired ? 'bg-brand-500/20 text-brand-500' : 'bg-slate-800 text-slate-200'
-                            }`}
-                          >
-                            {isHired ? 'Embauché' : 'Engager'}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'media' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                <h3 className="font-bold text-sm text-red-500 uppercase">Votre Rival Direct</h3>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <div className="font-bold">{player.rival.name}</div>
-                    <div className="text-xs text-slate-400">{player.rival.club}</div>
-                  </div>
-                  <div className="font-black text-red-500">{player.rival.intensity} %</div>
-                </div>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-                <h3 className="font-bold text-sm text-sky-500 uppercase">Réputation & Médias</h3>
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <div className="text-xs text-slate-500 uppercase mb-1">Notoriété</div>
-                  <div className="text-2xl font-bold text-sky-400">{player.status.fame} pts</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
+    function selectPosition(pos, btnEl) {
+      selectedPos = pos;
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('selected'));
+      btnEl.classList.add('selected');
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    function createCareer() {
+      const nameInput = document.getElementById('playerNameInput').value.trim() || "Alex Hunter";
+      const profile = positionProfiles[selectedPos];
+
+      player = {
+        name: nameInput,
+        club: "FC Bordeaux",
+        position: selectedPos,
+        age: 16,
+        energy: 100,
+        matchs: 0,
+        goals: 0,
+        cleanSheets: 0,
+        stats: { ...profile.stats },
+        avatar: profile.avatar,
+        logs: [`Début de carrière professionnelle en tant que ${selectedPos} !`]
+      };
+
+      saveGame();
+      initGameScreen();
+    }
+
+    function saveGame() {
+      localStorage.setItem('pro_career_save', JSON.stringify(player));
+    }
+
+    function calculateOVR() {
+      const s = player.stats;
+      const values = Object.values(s);
+      const sum = values.reduce((a, b) => a + b, 0);
+      return Math.round(sum / values.length);
+    }
+
+    function initGameScreen() {
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'flex';
+      updateUI();
+    }
+
+    function updateUI() {
+      if (!player) return;
+
+      const ovr = calculateOVR();
+      const isGK = player.position === "GK";
+
+      document.getElementById('cardOvr').textContent = ovr;
+      document.getElementById('cardPos').textContent = player.position;
+      document.getElementById('cardName').textContent = player.name;
+      document.getElementById('cardClub').textContent = player.club;
+      document.getElementById('cardAge').textContent = player.age + " ans";
+      document.getElementById('cardAvatar').textContent = player.avatar || "⚽";
+
+      // Adaptation des libellés de stats sur la carte (GK vs Joueur de champ)
+      const keys = Object.keys(player.stats);
+      if (isGK) {
+        document.getElementById('lbl1').textContent = "PLO";
+        document.getElementById('lbl2').textContent = "J.M";
+        document.getElementById('lbl3').textContent = "DEG";
+        document.getElementById('lbl4').textContent = "REF";
+        document.getElementById('lbl5').textContent = "VIT";
+        document.getElementById('lbl6').textContent = "PLA";
+
+        document.getElementById('mainStatLabel').innerHTML = `Clean Sheets: <strong>${player.cleanSheets || 0}</strong>`;
+        document.getElementById('trainBtn1').textContent = "Entraînement Réflexe";
+        document.getElementById('trainBtn2').textContent = "Entraînement Plongeon";
+      } else {
+        document.getElementById('lbl1').textContent = "VIT";
+        document.getElementById('lbl2').textContent = "TIR";
+        document.getElementById('lbl3').textContent = "PAS";
+        document.getElementById('lbl4').textContent = "DRI";
+        document.getElementById('lbl5').textContent = "DEF";
+        document.getElementById('lbl6').textContent = "PHY";
+
+        document.getElementById('mainStatLabel').innerHTML = `Buts: <strong>${player.goals}</strong>`;
+        document.getElementById('trainBtn1').textContent = "Entraînement Attaque";
+        document.getElementById('trainBtn2').textContent = "Entraînement Defense/Phy";
+      }
+
+      document.getElementById('stat1').textContent = player.stats[keys[0]];
+      document.getElementById('stat2').textContent = player.stats[keys[1]];
+      document.getElementById('stat3').textContent = player.stats[keys[2]];
+      document.getElementById('stat4').textContent = player.stats[keys[3]];
+      document.getElementById('stat5').textContent = player.stats[keys[4]];
+      document.getElementById('stat6').textContent = player.stats[keys[5]];
+
+      document.getElementById('energyVal').textContent = player.energy + "%";
+      document.getElementById('energyBar').style.width = player.energy + "%";
+      document.getElementById('matchCount').textContent = player.matchs;
+
+      // Type de Carte
+      const card = document.getElementById('futCard');
+      card.className = "fut-card";
+      if (ovr >= 85) card.classList.add("special");
+      else if (ovr >= 75) card.classList.add("gold");
+      else if (ovr >= 65) card.classList.add("silver");
+      else card.classList.add("bronze");
+
+      // Logs
+      const logContainer = document.getElementById('logContainer');
+      logContainer.innerHTML = player.logs.map(log => `<div class="log-item">${log}</div>`).join('');
+    }
+
+    function addLog(msg) {
+      player.logs.unshift(msg);
+      if (player.logs.length > 15) player.logs.pop();
+      saveGame();
+      updateUI();
+    }
+
+    function playMatch() {
+      if (player.energy < 25) {
+        alert("Vous êtes trop fatigué pour jouer ! Reposez-vous.");
+        return;
+      }
+
+      player.energy = Math.max(0, player.energy - 25);
+      player.matchs++;
+      const ovr = calculateOVR();
+      let logMsg = `Match #${player.matchs}: `;
+
+      if (player.position === "GK") {
+        const cleanSheet = Math.random() < (ovr / 110);
+        if (cleanSheet) {
+          player.cleanSheets = (player.cleanSheets || 0) + 1;
+          logMsg += "🧤 Clean Sheet ! Aucun but encaissé.";
+        } else {
+          logMsg += "Match disputé, quelques arrêts décisifs.";
+        }
+      } else {
+        const scored = Math.random() < (ovr / 120);
+        if (scored) {
+          player.goals++;
+          logMsg += "⚽ But marqué ! Excellente prestation.";
+        } else {
+          logMsg += "Match solide sans marquer.";
+        }
+      }
+
+      addLog(logMsg);
+    }
+
+    function train(type) {
+      if (player.energy < 15) {
+        alert("Pas assez d'énergie pour s'entraîner.");
+        return;
+      }
+
+      player.energy -= 15;
+      const keys = Object.keys(player.stats);
+
+      if (type === 'offensive') {
+        player.stats[keys[1]] += 1; // Tir ou JeuMain
+        addLog(`🎯 Entraînement réussi : +1 ${keys[1].toUpperCase()}`);
+      } else {
+        player.stats[keys[0]] += 1; // Vit ou Plongeon
+        addLog(`⚡ Entraînement réussi : +1 ${keys[0].toUpperCase()}`);
+      }
+
+      saveGame();
+      updateUI();
+    }
+
+    function rest() {
+      if (player.energy >= 100) {
+        alert("Vous êtes déjà en pleine forme !");
+        return;
+      }
+      player.energy = Math.min(100, player.energy + 40);
+      addLog("🛌 Repos effectué. Énergie récupérée.");
+      saveGame();
+      updateUI();
+    }
+
+    function resetGame() {
+      if (confirm("Voulez-vous réinitialiser votre carrière et créer un nouveau joueur ?")) {
+        localStorage.removeItem('pro_career_save');
+        player = null;
+        document.getElementById('gameScreen').style.display = 'none';
+        document.getElementById('setupScreen').style.display = 'flex';
+      }
+    }
+
+    // Lancement au chargement
+    if (player) {
+      initGameScreen();
+    } else {
+      document.getElementById('setupScreen').style.display = 'flex';
+    }
   </script>
 </body>
 </html>
