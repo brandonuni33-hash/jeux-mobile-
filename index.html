@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Football Career RPG - Choix en Match</title>
+  <title>Football Career RPG - Complete Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -22,15 +22,11 @@
 
   <script>
     const POSITIONS = ['BU', 'AG', 'AD', 'MOC', 'MC', 'MDC', 'DC', 'DD', 'DG', 'GK'];
-    const POPULAR_CLUBS = [
-      'FC Girondins de Bordeaux', 'Paris Saint-Germain', 'Olympique de Marseille',
-      'Olympique Lyonnais', 'Real Madrid', 'FC Barcelone', 'Arsenal', 'Manchester United', 'Bayern Munich'
-    ];
 
     const ACADEMY_POOL = [
-      { id: 'bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, coach: { name: 'Marc Vasseur', style: 'Gegenpressing', trust: 50 }, expectations: 'Exige un engagement total.', targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 } },
-      { id: 'pessac', club: 'US Pessac U15', division: 'Régional 2', salary: 95, coach: { name: 'Antoine Morel', style: 'Tiki-Taka', trust: 60 }, expectations: 'Recherche la précision technique.', targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 } },
-      { id: 'girondins_b', club: 'Girondins B (U15)', division: 'National U15', salary: 220, coach: { name: 'Laurent Blanc', style: 'Contre-Attaque', trust: 40 }, expectations: 'Exige la victoire à chaque match.', targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 } }
+      { id: 'bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, coach: { name: 'Marc Vasseur', style: 'Gegenpressing', trust: 50 }, expectations: 'Exige un engagement total.', targets: { field: { goals: 10, assists: 5 }, minRating: 6.8 } },
+      { id: 'pessac', club: 'US Pessac U15', division: 'Régional 2', salary: 95, coach: { name: 'Antoine Morel', style: 'Tiki-Taka', trust: 60 }, expectations: 'Recherche la précision technique.', targets: { field: { goals: 6, assists: 8 }, minRating: 6.5 } },
+      { id: 'girondins_b', club: 'Girondins B (U15)', division: 'National U15', salary: 220, coach: { name: 'Laurent Blanc', style: 'Contre-Attaque', trust: 40 }, expectations: 'Exige la victoire à chaque match.', targets: { field: { goals: 15, assists: 10 }, minRating: 7.2 } }
     ];
 
     const RIVALS_POOL = [
@@ -39,28 +35,83 @@
       { name: 'Mathéo Dubois', club: 'FC Bacalan U15', pos: 'AG', goals: 0 }
     ];
 
-    // Banques d'actions pour le mode match interactif
     const ACTION_SITUATIONS = [
       {
         text: "Tu te retrouves à l'entrée de la surface avec le ballon sur ton bon pied.",
         choices: [
-          { text: "🎯 Tirer en finesse dans le petit filet", successRate: 0.5, onWin: { goal: 1, ratingDelta: 1.2, log: "Superbe frappe enroulée ! BUT !" }, onLoss: { ratingDelta: -0.4, log: "La frappe passe à côté du cadre." } },
-          { text: "👟 Donner une passe décisive au second poteau", successRate: 0.65, onWin: { assist: 1, ratingDelta: 0.9, log: "Offrande parfaite pour ton coéquipier ! PASSE DÉCISIVE !" }, onLoss: { ratingDelta: -0.3, log: "La passe est interceptée par la défense." } },
-          { text: "⚡ Dribbler le dernier défenseur", successRate: 0.4, onWin: { goal: 1, ratingDelta: 1.5, log: "Dribble éliminatoire magique puis frappe ! BUT MAGNIFIQUE !" }, onLoss: { ratingDelta: -0.6, log: "Tu perds le ballon de manière évitable." } }
+          {
+            text: "🎯 Tirer en finesse dans le petit filet",
+            statUsed: "tir",
+            baseRate: 0.45,
+            statGainsOnWin: { tir: 0.8, moral: 2 },
+            statLossOnLoss: { moral: -2 },
+            onWin: { goal: 1, ratingDelta: 1.2, log: "Superbe frappe enroulée ! BUT !" },
+            onLoss: { ratingDelta: -0.4, log: "La frappe passe à côté du cadre." }
+          },
+          {
+            text: "👟 Donner une passe décisive au second poteau",
+            statUsed: "passe",
+            baseRate: 0.50,
+            statGainsOnWin: { passe: 0.8, moral: 2 },
+            statLossOnLoss: { moral: -1 },
+            onWin: { assist: 1, ratingDelta: 0.9, log: "Offrande parfaite pour ton coéquipier ! PASSE DÉCISIVE !" },
+            onLoss: { ratingDelta: -0.3, log: "La passe est interceptée par la défense." }
+          },
+          {
+            text: "⚡ Dribbler le dernier défenseur",
+            statUsed: "dribble",
+            baseRate: 0.35,
+            statGainsOnWin: { dribble: 1.0, moral: 3 },
+            statLossOnLoss: { moral: -3 },
+            onWin: { goal: 1, ratingDelta: 1.5, log: "Dribble éliminatoire magique puis frappe ! BUT MAGNIFIQUE !" },
+            onLoss: { ratingDelta: -0.6, log: "Tu perds le ballon de manière évitable." }
+          }
         ]
       },
       {
         text: "Contre-attaque rapide ! Tu as un appel de balle sur l'aile.",
         choices: [
-          { text: "🚀 Partir en vitesse et repiquer dans l'axe", successRate: 0.55, onWin: { goal: 1, ratingDelta: 1.1, log: "Tu débordes la défense et ajustes le gardien ! BUT !" }, onLoss: { ratingDelta: -0.3, log: "Le défenseur te rattrape à la course." } },
-          { text: "📐 Centrer en première intention", successRate: 0.6, onWin: { assist: 1, ratingDelta: 0.8, log: "Centre millimétré coupé au premier poteau ! PASSE DÉCISIVE !" }, onLoss: { ratingDelta: -0.2, log: "Le centre est trop appuyé." } }
+          {
+            text: "🚀 Partir en vitesse et repiquer dans l'axe",
+            statUsed: "physique",
+            baseRate: 0.50,
+            statGainsOnWin: { physique: 0.7, tir: 0.4, moral: 2 },
+            statLossOnLoss: { moral: -2 },
+            onWin: { goal: 1, ratingDelta: 1.1, log: "Tu débordes la défense et ajustes le gardien ! BUT !" },
+            onLoss: { ratingDelta: -0.3, log: "Le défenseur te rattrape à la course." }
+          },
+          {
+            text: "📐 Centrer en première intention",
+            statUsed: "passe",
+            baseRate: 0.55,
+            statGainsOnWin: { passe: 0.7, moral: 2 },
+            statLossOnLoss: { moral: -1 },
+            onWin: { assist: 1, ratingDelta: 0.8, log: "Centre millimétré coupé au premier poteau ! PASSE DÉCISIVE !" },
+            onLoss: { ratingDelta: -0.2, log: "Le centre est trop appuyé." }
+          }
         ]
       },
       {
-        text: "Duel physique intense au milieu de terrain.",
+        text: "Duel physique intense au milieu de terrain sous la pression de l'adversaire.",
         choices: [
-          { text: "💪 Imposer ton physique et relancer propre", successRate: 0.7, onWin: { ratingDelta: 0.6, log: "Duel gagné avec autorité et relance propre." }, onLoss: { ratingDelta: -0.5, log: "Faute concédée dans une zone dangereuse." } },
-          { text: "🪄 Faire une feinte de corps pour éliminer", successRate: 0.45, onWin: { ratingDelta: 0.9, log: "Feinte de classe qui mystifie l'adversaire !" }, onLoss: { ratingDelta: -0.4, log: "Perte de balle dangereuse." } }
+          {
+            text: "💪 Imposer ton physique et relancer propre",
+            statUsed: "physique",
+            baseRate: 0.55,
+            statGainsOnWin: { physique: 0.8, moral: 1 },
+            statLossOnLoss: { mental: -0.2, moral: -2 },
+            onWin: { ratingDelta: 0.6, log: "Duel gagné avec autorité et relance propre." },
+            onLoss: { ratingDelta: -0.5, log: "Faute concédée dans une zone dangereuse." }
+          },
+          {
+            text: "🧠 Conserver le ballon avec calme et vision du jeu",
+            statUsed: "mental",
+            baseRate: 0.50,
+            statGainsOnWin: { mental: 0.8, passe: 0.3, moral: 2 },
+            statLossOnLoss: { moral: -2 },
+            onWin: { ratingDelta: 0.8, log: "Lecture du jeu exceptionnelle ! L'attaque repart de plus belle." },
+            onLoss: { ratingDelta: -0.4, log: "Perte de balle par manque de réactivité." }
+          }
         ]
       }
     ];
@@ -68,14 +119,14 @@
     let state = {
       step: 1,
       player: JSON.parse(localStorage.getItem('career_rpg_save')) || null,
-      form: { firstName: 'Brandon', lastName: 'Le Moan', position: 'BU', favouriteClub: 'FC Girondins de Bordeaux', customClub: '' },
+      form: { firstName: 'Brandon', lastName: 'Le Moan', position: 'BU' },
       availableOffers: [],
       selectedOffer: null,
       weekLogs: [],
       pressNews: [],
       rival: RIVALS_POOL[0],
+      trainingDoneThisWeek: false,
 
-      // État spécifique au match en cours
       matchState: null
     };
 
@@ -83,8 +134,29 @@
       return [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
     }
 
+    function calculateSuccessRate(choice) {
+      const stats = state.player.stats;
+      const statVal = stats[choice.statUsed] || 50;
+      const moralVal = stats.moral || 50;
+
+      const statBonus = (statVal - 50) * 0.005;
+      const moralBonus = (moralVal - 50) * 0.002;
+
+      const totalRate = choice.baseRate + statBonus + moralBonus;
+      return Math.max(0.15, Math.min(0.92, totalRate));
+    }
+
+    function trainStat(statKey) {
+      if (state.trainingDoneThisWeek) return;
+      const p = state.player;
+      p.stats[statKey] = Math.min(99, Math.round((p.stats[statKey] + 1.2) * 10) / 10);
+      state.trainingDoneThisWeek = true;
+      state.weekLogs.unshift(`🏋️ Entraînement accompli : +1.2 en ${statKey.toUpperCase()}`);
+      localStorage.setItem('career_rpg_save', JSON.stringify(p));
+      render();
+    }
+
     function startMatch() {
-      // Préparation d'une session de match (3 situations d'action)
       const shuffledSituations = [...ACTION_SITUATIONS].sort(() => 0.5 - Math.random());
       state.matchState = {
         currentTurn: 0,
@@ -93,7 +165,8 @@
         goals: 0,
         assists: 0,
         rating: 6.0,
-        logs: []
+        logs: [],
+        statChangesThisMatch: []
       };
       render();
     }
@@ -103,8 +176,23 @@
       const sit = ms.situations[ms.currentTurn];
       const choice = sit.choices[choiceIndex];
 
-      const success = Math.random() < choice.successRate;
+      const successRate = calculateSuccessRate(choice);
+      const success = Math.random() < successRate;
       const outcome = success ? choice.onWin : choice.onLoss;
+
+      const pStats = state.player.stats;
+      const gainsLosses = success ? choice.statGainsOnWin : choice.statLossOnLoss;
+
+      if (gainsLosses) {
+        Object.keys(gainsLosses).forEach(st => {
+          const delta = gainsLosses[st];
+          pStats[st] = Math.max(20, Math.min(99, Math.round((pStats[st] + delta) * 10) / 10));
+          if (delta !== 0) {
+            const sign = delta > 0 ? '+' : '';
+            ms.statChangesThisMatch.push(`${st.toUpperCase()} ${sign}${delta}`);
+          }
+        });
+      }
 
       if (outcome.goal) ms.goals += outcome.goal;
       if (outcome.assist) ms.assists += outcome.assist;
@@ -133,8 +221,15 @@
 
       p.finances.balance += p.contract.salary;
 
-      // Presse (1 chance sur 3)
-      if (Math.random() <= 0.35) {
+      // Évolution de la confiance du coach
+      if (parseFloat(matchRating) >= 7.0) {
+        p.coachTrust = Math.min(100, p.coachTrust + 4);
+      } else if (parseFloat(matchRating) < 6.0) {
+        p.coachTrust = Math.max(0, p.coachTrust - 5);
+      }
+
+      // Génération de la presse
+      if (Math.random() <= 0.4) {
         const article = generatePressArticle(matchRating, ms.goals, ms.assists, `${p.identity.firstName} ${p.identity.lastName}`);
         if (article) state.pressNews.unshift(article);
       }
@@ -145,9 +240,10 @@
       p.status.week += 1;
       if (p.status.week > 52) { p.status.week = 1; p.status.season += 1; p.identity.age += 1; }
 
-      const summaryLog = `S${p.status.season} W${p.status.week} - Match terminé (${matchRating}/10) : ${ms.goals} But(s), ${ms.assists} Passe(s).`;
+      const summaryLog = `S${p.status.season} W${p.status.week} - Match (${matchRating}/10) | ${ms.goals} But(s), ${ms.assists} Pass(es).`;
       state.weekLogs.unshift(summaryLog);
 
+      state.trainingDoneThisWeek = false;
       localStorage.setItem('career_rpg_save', JSON.stringify(p));
       state.matchState = null;
       render();
@@ -156,11 +252,11 @@
     function generatePressArticle(rating, goals, assists, playerName) {
       const numRating = parseFloat(rating);
       if (numRating >= 8.0) {
-        return { source: 'Sud Ouest Sport', badge: 'À LA UNE 🌟', badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30', title: `${playerName} magistral !`, text: `Avec une note de ${rating}/10, le jeune talent a crevé l'écran cette semaine.` };
+        return { source: 'Sud Ouest Sport', badge: 'À LA UNE 🌟', title: `${playerName} magistral !`, text: `Avec une note de ${rating}/10, le jeune talent a crevé l'écran cette semaine.` };
       } else if (goals >= 2) {
-        return { source: 'L\'Équipe Jeunes', badge: 'PERFORMANCE 🔥', badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', title: `Doublé de ${playerName} !`, text: `Auteur de 2 buts, il a porté son équipe vers la victoire.` };
+        return { source: 'L\'Équipe Jeunes', badge: 'PERFORMANCE 🔥', title: `Doublé de ${playerName} !`, text: `Auteur de 2 buts, il a porté son équipe vers la victoire.` };
       } else if (numRating <= 5.5) {
-        return { source: 'Actu Foot', badge: 'COUP DE MOU ⚠️', badgeBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30', title: `Match difficile pour ${playerName}`, text: `Une prestation timide notée ${rating}/10.` };
+        return { source: 'Actu Foot', badge: 'COUP DE MOU ⚠️', title: `Match difficile pour ${playerName}`, text: `Une prestation timide notée ${rating}/10.` };
       }
       return null;
     }
@@ -186,16 +282,16 @@
         } else {
           app.innerHTML = `
             <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-              <h2 class="text-lg font-bold">Choisir un contrat</h2>
+              <h2 class="text-lg font-bold">Choisir un contrat d'Académie</h2>
               <div class="space-y-2">
                 ${state.availableOffers.map(o => `
                   <div onclick="selectOffer('${o.id}')" class="p-4 rounded-xl border cursor-pointer ${state.selectedOffer && state.selectedOffer.id === o.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'}">
                     <div class="font-bold">${o.club}</div>
-                    <div class="text-xs text-slate-400">${o.division} • ${o.salary}€ / sem</div>
+                    <div class="text-xs text-slate-400">${o.division} • ${o.salary}€ / sem • Coach: ${o.coach.name} (${o.coach.style})</div>
                   </div>
                 `).join('')}
               </div>
-              <button onclick="startCareer()" class="w-full py-3 bg-brand-500 font-black rounded-xl text-slate-950 uppercase">Signer ✍️</button>
+              <button onclick="startCareer()" class="w-full py-3 bg-brand-500 font-black rounded-xl text-slate-950 uppercase">Signer le contrat ✍️</button>
             </div>
           `;
         }
@@ -212,7 +308,7 @@
             <div class="max-w-2xl mx-auto bg-slate-900 border border-brand-500/40 rounded-2xl p-6 space-y-5 shadow-2xl">
               <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <span class="text-xs font-black text-brand-500 uppercase">⚡ MATCH EN COURS - Action ${ms.currentTurn + 1} / ${ms.totalTurns}</span>
-                <span class="text-xs bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 font-bold">Note actuelle : <strong class="text-amber-400">${ms.rating.toFixed(1)}</strong></span>
+                <span class="text-xs bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 font-bold">Note : <strong class="text-amber-400">${ms.rating.toFixed(1)}</strong></span>
               </div>
 
               <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-sm font-medium leading-relaxed">
@@ -220,18 +316,25 @@
               </div>
 
               <div class="space-y-2.5">
-                <div class="text-xs font-bold text-slate-400 uppercase">Fais ton choix :</div>
-                ${currentSit.choices.map((c, idx) => `
-                  <button onclick="makeMatchChoice(${idx})" class="w-full p-3.5 bg-slate-950 hover:bg-brand-500/10 border border-slate-800 hover:border-brand-500 text-left rounded-xl text-xs font-bold transition flex justify-between items-center">
-                    <span>${c.text}</span>
-                    <span class="text-[10px] text-slate-500 font-normal">Chances : ${Math.round(c.successRate * 100)}%</span>
-                  </button>
-                `).join('')}
+                <div class="text-xs font-bold text-slate-400 uppercase">Choix tactiques :</div>
+                ${currentSit.choices.map((c, idx) => {
+                  const ratePercent = Math.round(calculateSuccessRate(c) * 100);
+                  const statVal = Math.round(p.stats[c.statUsed] || 50);
+                  return `
+                    <button onclick="makeMatchChoice(${idx})" class="w-full p-3.5 bg-slate-950 hover:bg-brand-500/10 border border-slate-800 hover:border-brand-500 text-left rounded-xl text-xs font-bold transition flex justify-between items-center">
+                      <div>
+                        <div class="text-slate-100">${c.text}</div>
+                        <div class="text-[10px] text-slate-500 font-normal mt-0.5">Stat : <span class="text-brand-400 font-semibold uppercase">${c.statUsed} (${statVal})</span></div>
+                      </div>
+                      <span class="px-2.5 py-1 bg-slate-900 rounded border border-slate-800 text-emerald-400 font-bold text-xs">${ratePercent}%</span>
+                    </button>
+                  `;
+                }).join('')}
               </div>
 
               ${ms.logs.length > 0 ? `
                 <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-900 text-xs space-y-1">
-                  <div class="text-[10px] text-slate-500 font-bold uppercase">Dernières actions :</div>
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">Actions précédentes :</div>
                   ${ms.logs.map(l => `<div class="text-emerald-400 font-medium">• ${l}</div>`).join('')}
                 </div>
               ` : ''}
@@ -240,36 +343,102 @@
           return;
         }
 
-        // Mode DASHBOARD STANDARD
+        // DASHBOARD COMPLET
         app.innerHTML = `
           <div class="space-y-5">
+            <!-- HEADER JOUEUR -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex justify-between items-center">
               <div>
                 <h2 class="text-2xl font-black">${p.identity.firstName} ${p.identity.lastName} (${p.identity.position})</h2>
-                <div class="text-xs text-slate-400">${p.contract.club} • ${p.identity.age} ans</div>
+                <div class="text-xs text-slate-400">${p.contract.club} • S${p.status.season} W${p.status.week} (${p.identity.age} ans)</div>
               </div>
-              <div class="text-right text-xs">
-                <div class="text-emerald-400 font-bold">${p.finances.balance} €</div>
-                <div class="text-amber-400 font-bold">${p.status.averageRating} / 10</div>
+              <div class="text-right text-xs space-y-1">
+                <div class="text-emerald-400 font-bold">Solde: ${p.finances.balance} €</div>
+                <div class="text-amber-400 font-bold">Moyenne: ${p.status.averageRating} / 10</div>
+                <div class="text-blue-400 font-bold">Confiance Coach: ${p.coachTrust}%</div>
               </div>
             </div>
 
-            {/* Kiosque Presse */}
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-              <div class="text-xs font-bold text-slate-400 uppercase mb-2">📰 Dernier Article de Presse</div>
-              ${latestArticle ? `
+            <!-- ENTRAÎNEMENT DE LA SEMAINE -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div class="text-xs font-bold text-slate-400 uppercase flex justify-between">
+                <span>🏋️ Entraînement Hebdomadaire</span>
+                <span class="${state.trainingDoneThisWeek ? 'text-amber-400' : 'text-emerald-400'} font-bold">
+                  ${state.trainingDoneThisWeek ? 'Séance effectuée cette semaine' : '1 séance disponible'}
+                </span>
+              </div>
+              <div class="grid grid-cols-3 md:grid-cols-5 gap-2">
+                ${['tir', 'passe', 'dribble', 'physique', 'mental'].map(st => `
+                  <button onclick="trainStat('${st}')" ${state.trainingDoneThisWeek ? 'disabled' : ''} class="p-2.5 bg-slate-950 border border-slate-800 hover:border-brand-500 rounded-xl text-xs font-bold text-center capitalize transition disabled:opacity-40">
+                    +1.2 ${st}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- TABLEAU DES ATTRIBUTS -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div class="text-xs font-bold text-slate-400 uppercase">📊 Attributs Détaillés</div>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <div class="text-[10px] text-slate-500 font-bold">${latestArticle.source}</div>
-                  <div class="text-sm font-bold text-slate-200">${latestArticle.title}</div>
-                  <p class="text-xs text-slate-400 mt-1">${latestArticle.text}</p>
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">🎯 Tir</div>
+                  <div class="text-lg font-black text-emerald-400">${Math.round(p.stats.tir)}</div>
                 </div>
-              ` : `<div class="text-xs text-slate-500 italic">Pas de presse cette semaine.</div>`}
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">👟 Passe</div>
+                  <div class="text-lg font-black text-emerald-400">${Math.round(p.stats.passe)}</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">⚡ Dribble</div>
+                  <div class="text-lg font-black text-emerald-400">${Math.round(p.stats.dribble)}</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">💪 Physique</div>
+                  <div class="text-lg font-black text-emerald-400">${Math.round(p.stats.physique)}</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">🧠 Mental</div>
+                  <div class="text-lg font-black text-emerald-400">${Math.round(p.stats.mental)}</div>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">🔥 Moral</div>
+                  <div class="text-lg font-black text-amber-400">${Math.round(p.stats.moral)}</div>
+                </div>
+              </div>
             </div>
 
-            {/* Bouton de lancement de match */}
+            <!-- KIOSQUE PRESSE & RIVAL -->
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2">📰 Dernier Article de Presse</div>
+                ${latestArticle ? `
+                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <div class="text-[10px] text-slate-500 font-bold">${latestArticle.source}</div>
+                    <div class="text-sm font-bold text-slate-200">${latestArticle.title}</div>
+                    <p class="text-xs text-slate-400 mt-1">${latestArticle.text}</p>
+                  </div>
+                ` : `<div class="text-xs text-slate-500 italic">Pas de publication cette semaine.</div>`}
+              </div>
+
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <div class="text-xs font-bold text-slate-400 uppercase mb-2">⚔️ Rivalité Directe</div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <div>
+                    <div class="text-sm font-bold">${state.rival.name}</div>
+                    <div class="text-xs text-slate-500">${state.rival.club}</div>
+                  </div>
+                  <div class="text-right text-xs">
+                    <div class="text-amber-400 font-bold">${state.rival.goals} Buts</div>
+                    <div class="text-slate-500">Toi : ${p.history.goals} Buts</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTION DU MATCH DE LA SEMAINE -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
               <button onclick="startMatch()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl uppercase text-sm shadow-lg shadow-brand-500/20">
-                ⚽ JOUER LE MATCH DE LA SEMAINE (Choix interactifs) ▶
+                ⚽ JOUER LE MATCH DE LA SEMAINE ▶
               </button>
 
               <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 h-28 overflow-y-auto text-xs space-y-1">
@@ -293,18 +462,23 @@
       render();
     }
     function selectOffer(id) { state.selectedOffer = state.availableOffers.find(o => o.id === id); render(); }
+    
     function startCareer() {
+      const offer = state.selectedOffer;
       state.player = {
         identity: { firstName: state.form.firstName, lastName: state.form.lastName, age: 14, position: state.form.position },
         status: { week: 1, season: 1, averageRating: 6.5 },
-        contract: { club: state.selectedOffer.club, division: state.selectedOffer.division, salary: state.selectedOffer.salary },
+        contract: { club: offer.club, division: offer.division, salary: offer.salary },
+        coachTrust: offer.coach.trust,
         finances: { balance: 350 },
+        stats: { tir: 52, passe: 50, dribble: 54, physique: 48, mental: 50, moral: 75 },
         history: { matchs: 0, goals: 0, assists: 0 }
       };
       localStorage.setItem('career_rpg_save', JSON.stringify(state.player));
-      state.weekLogs = [`Signature au ${state.selectedOffer.club}.`];
+      state.weekLogs = [`Signature au ${offer.club} sous les ordres de ${offer.coach.name}.`];
       render();
     }
+
     function resetCareer() { localStorage.removeItem('career_rpg_save'); state.player = null; state.step = 1; render(); }
 
     render();
