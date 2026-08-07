@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Football Career RPG - Dynastie</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    // --- DONNÉES DES ORIGINES ---
+    const ORIGINS = [
+      { id: 'CENTRE_FORMATION', name: 'Centre de Formation', desc: '+10% Mental/Tactique | Attraction grands clubs' },
+      { id: 'CLUB_AMATEUR', name: 'Club Amateur', desc: '+10% Physique/Endurance | XP Mental +15%' },
+      { id: 'FUTSAL', name: 'Prodige Futsal', desc: '+10% Dribble/Technique | -15% Physique' },
+      { id: 'DEBUTANT_TARDIF', name: 'Débutant Tardif', desc: 'Potentiel très large (65-99) | -5 OVR départ' },
+      { id: 'STREET_FOOTBALL', name: 'Foot de Rue', desc: '+10% Agressivité/Dribble | Instinct 1v1' },
+      { id: 'ATHLETE_POLYVALENT', name: 'Athlète Polyvalent', desc: '+15% Vitesse/Puissance | Moteur Hybride' }
+    ];
+
+    // --- OFFRES INITIALES DE DÉPART (14 ANS) ---
+    const INITIAL_OFFERS = [
+      { id: 'fc_bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, role: 'Titulaire Jeunes' },
+      { id: 'pessac_al', club: 'US Pessac U15', division: 'Régional 2', salary: 90, role: 'Cadre d\'Équipe' },
+      { id: 'bordeaux_ac', club: 'Girondins B (U15)', division: 'National U15', salary: 250, role: 'Réserviste' }
+    ];
+
+    // --- CATALOGUE DU STAFF PRIVÉ ---
+    const STAFF_CATALOG = {
+      physicalTrainer: [
+        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Entraînement du club uniquement.' },
+        { tier: 1, name: 'Préparateur Amateur', cost: 200, minSalary: 0, reqFame: 0, minBalance: 500, desc: '-5% risque blessure, +5% récupération.' },
+        { tier: 2, name: 'Spécialiste Pro', cost: 2500, minSalary: 5000, reqFame: 0, minBalance: 0, desc: '-20% risque blessure, +20% récupération.' },
+        { tier: 3, name: 'Élite Mondial', cost: 15000, minSalary: 50000, reqFame: 70, minBalance: 0, desc: '-50% risque blessure, récupération maximale.' }
+      ],
+      tacticalTrainer: [
+        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Séances vidéo classiques.' },
+        { tier: 1, name: 'Ex-Pro Local', cost: 150, minSalary: 0, reqFame: 0, minBalance: 300, desc: '+5% XP Dribble & Tir.' },
+        { tier: 2, name: 'Analyste Dédié', cost: 1800, minSalary: 3000, reqFame: 0, minBalance: 0, desc: '+15% XP Technique ciblée.' },
+        { tier: 3, name: 'Légende Retraitée', cost: 12000, minSalary: 0, reqFame: 80, minBalance: 100000, desc: '+35% XP Technique & Gestes 5 stars.' }
+      ],
+      mentalCoach: [
+        { tier: 0, name: 'Aucun', cost: 0, minSalary: 0, reqFame: 0, desc: 'Gestion personnelle du stress.' },
+        { tier: 1, name: 'App / Livres de Santé', cost: 50, minSalary: 0, reqFame: 0, minBalance: 100, desc: 'Fixe le plancher de Santé Mentale à 50.' },
+        { tier: 2, name: 'Psychologue du Sport', cost: 1200, minSalary: 2000, reqFame: 0, minBalance: 0, desc: '+10 Santé Mentale automatique par semaine.' },
+        { tier: 3, name: 'Guru des Stars', cost: 8000, minSalary: 0, reqFame: 60, minBalance: 0, desc: 'Immunité aux baisses de moral lors des défaites.' }
+      ],
+      chef: [
+        { tier: 0, name: 'Repas Familiaux / Cantine', cost: 0, minSalary: 0, reqFame: 0, desc: 'Nutrition standard sans ajustement.' },
+        { tier: 1, name: 'Diététicien Sportif', cost: 1500, minSalary: 4000, reqFame: 0, minBalance: 0, desc: '+10% condition physique en fin de match.' },
+        { tier: 2, name: 'Chef Étoilé Personnel', cost: 10000, minSalary: 0, reqFame: 75, minBalance: 0, desc: '-30% fatigue cumulative, préserve le potentiel.' }
+      ]
+    };
+
+    function App() {
+      const [player, setPlayer] = useState(null);
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [weekLogs, setWeekLogs] = useState([]);
+
+      const [form, setForm] = useState({
+        firstName: 'Brandon',
+        lastName: 'Le Moan',
+        position: 'BU',
+        origin: 'CENTRE_FORMATION',
+        offerId: 'fc_bacalan'
+      });
+
+      const handleCreatePlayer = () => {
+        const selectedOffer = INITIAL_OFFERS.find(o => o.id === form.offerId);
+        const baseOvr = form.origin === 'DEBUTANT_TARDIF' ? 47 : 52;
+        const basePot = Math.floor(Math.random() * 20) + 78;
+
+        const newPlayer = {
+          identity: {
+            firstName: form.firstName,
+            lastName: form.lastName,
+            age: 14,
+            generation: 1,
+            position: form.position,
+            origin: form.origin
+          },
+          attributes: {
+            overall: baseOvr,
+            hiddenPotential: basePot,
+            stats: {
+              pace: Math.floor(Math.random() * 15) + 50,
+              shooting: Math.floor(Math.random() * 15) + 50,
+              passing: Math.floor(Math.random() * 15) + 45,
+              dribbling: Math.floor(Math.random() * 15) + 50,
+              defending: 35,
+              physical: Math.floor(Math.random() * 15) + 45
+            }
+          },
+          status: {
+            mentalHealth: 85,
+            physicalCondition: 100,
+            discipline: 75,
+            fame: 10,
+            week: 1,
+            season: 1
+          },
+          finances: {
+            balance: 500,
+            weeklySalary: selectedOffer.salary
+          },
+          contract: {
+            club: selectedOffer.club,
+            division: selectedOffer.division,
+            role: selectedOffer.role
+          },
+          privateStaff: {
+            physicalTrainer: 0,
+            tacticalTrainer: 0,
+            mentalCoach: 0,
+            chef: 0
+          },
+          rival: {
+            name: 'Enzo Rival',
+            club: 'Rival FC',
+            intensity: 40
+          }
+        };
+
+        setPlayer(newPlayer);
+        setWeekLogs([`Saison 1 - Début de carrière à 14 ans chez ${selectedOffer.club} !`]);
+      };
+
+      const nextWeek = () => {
+        if (!player) return;
+
+        setPlayer(prev => {
+          let updated = { ...prev };
+          let logs = [];
+          
+          let totalMonthlyStaffCost = 0;
+          Object.keys(updated.privateStaff).forEach(type => {
+            const tierIndex = updated.privateStaff[type];
+            totalMonthlyStaffCost += STAFF_CATALOG[type][tierIndex].cost;
+          });
+
+          let newBalance = updated.finances.balance + updated.finances.weeklySalary;
+          if (updated.status.week % 4 === 0 && totalMonthlyStaffCost > 0) {
+            newBalance -= totalMonthlyStaffCost;
+            logs.push(`💸 Prélèvement mensuel du staff privé : -${totalMonthlyStaffCost} €`);
+          }
+
+          const deltaFactor = Math.random();
+          if (deltaFactor > 0.90) {
+            logs.push("🌟 Jour de grâce ! Prestation XXL en match.");
+            updated.status.fame += 2;
+          } else if (deltaFactor < 0.15) {
+            logs.push("😓 Jour sans... Fatigue latente sur le terrain.");
+            updated.status.mentalHealth = Math.max(0, updated.status.mentalHealth - 5);
+          } else {
+            logs.push("⚽ Match solide cette semaine. Entraînement accompli.");
+          }
+
+          if (updated.privateStaff.mentalCoach === 1 && updated.status.mentalHealth < 50) {
+            updated.status.mentalHealth = 50;
+            logs.push("🧠 Le staff mental maintient votre moral au seuil minimal (50%).");
+          } else if (updated.privateStaff.mentalCoach === 2) {
+            updated.status.mentalHealth = Math.min(100, updated.status.mentalHealth + 10);
+          }
+
+          let newWeek = updated.status.week + 1;
+          let newSeason = updated.status.season;
+          let newAge = updated.identity.age;
+
+          if (newWeek > 52) {
+            newWeek = 1;
+            newSeason += 1;
+            newAge += 1;
+            const ovrGain = Math.floor(Math.random() * 3) + 2;
+            updated.attributes.overall = Math.min(updated.attributes.hiddenPotential, updated.attributes.overall + ovrGain);
+            logs.push(`🎆 FIN DE SAISON ${newSeason - 1} ! Bilan : +${ovrGain} OVR. Vous avez ${newAge} ans.`);
+          }
+
+          updated.status.week = newWeek;
+          updated.status.season = newSeason;
+          updated.identity.age = newAge;
+          updated.finances.balance = newBalance;
+
+          setWeekLogs(prevLogs => [logs.join(" | "), ...prevLogs.slice(0, 15)]);
+          return updated;
+        });
+      };
+
+      const hireStaff = (type, tierIndex) => {
+        const targetStaff = STAFF_CATALOG[type][tierIndex];
+        
+        if (player.finances.weeklySalary < targetStaff.minSalary) {
+          alert(`Salaire insuffisant (${targetStaff.minSalary}€/sem requis).`);
+          return;
+        }
+        if (player.status.fame < targetStaff.reqFame) {
+          alert(`Notoriété insuffisante (${targetStaff.reqFame} requis).`);
+          return;
+        }
+        if (targetStaff.minBalance && player.finances.balance < targetStaff.minBalance) {
+          alert(`Épargne insuffisante (${targetStaff.minBalance}€ requis).`);
+          return;
+        }
+
+        setPlayer(prev => ({
+          ...prev,
+          privateStaff: { ...prev.privateStaff, [type]: tierIndex }
+        }));
+      };
+
+      if (!player) {
+        return (
+          <div className="max-w-2xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-emerald-300">
+                Football RPG : Dynastie
+              </h1>
+              <p className="text-slate-400 text-sm mt-1">Créez votre joueur à 14 ans et écrivez votre histoire.</p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Prénom</label>
+                  <input
+                    type="text"
+                    value={form.firstName}
+                    onChange={e => setForm({...form, firstName: e.target.value})}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Nom</label>
+                  <input
+                    type="text"
+                    value={form.lastName}
+                    onChange={e => setForm({...form, lastName: e.target.value})}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Poste</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['BU', 'MOC', 'AG', 'DC'].map(pos => (
+                    <button
+                      key={pos}
+                      onClick={() => setForm({...form, position: pos})}
+                      className={`p-3 rounded-lg border text-sm font-bold transition ${
+                        form.position === pos ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Origine</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {ORIGINS.map(org => (
+                    <div
+                      key={org.id}
+                      onClick={() => setForm({...form, origin: org.id})}
+                      className={`p-3 rounded-xl border cursor-pointer transition ${
+                        form.origin === org.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="font-bold text-sm text-slate-200">{org.name}</div>
+                      <div className="text-xs text-slate-400 mt-1">{org.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase mb-2">Premier Club (14 ans)</label>
+                <div className="space-y-2">
+                  {INITIAL_OFFERS.map(offer => (
+                    <div
+                      key={offer.id}
+                      onClick={() => setForm({...form, offerId: offer.id})}
+                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                        form.offerId === offer.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-bold text-sm">{offer.club}</div>
+                        <div className="text-xs text-slate-400">{offer.division} • {offer.role}</div>
+                      </div>
+                      <div className="font-extrabold text-brand-500">{offer.salary} € / sem</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={handleCreatePlayer}
+                className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-slate-950 font-extrabold rounded-xl shadow-lg transition"
+              >
+                Commencer Ma Carrière (14 ans)
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-emerald-300 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg">
+                {player.attributes.overall}
+              </div>
+              <div>
+                <h2 className="text-2xl font-black">{player.identity.firstName} {player.identity.lastName}</h2>
+                <div className="text-xs text-slate-400 flex items-center gap-2 mt-1">
+                  <span>{player.identity.age} ans</span> • 
+                  <span className="text-brand-500 font-semibold">{player.identity.position}</span> • 
+                  <span>{player.contract.club}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-6 text-sm bg-slate-950 p-4 rounded-xl border border-slate-800/80 w-full md:w-auto justify-between">
+              <div>
+                <div className="text-xs text-slate-500 uppercase">Solde</div>
+                <div className="font-bold text-emerald-400">{player.finances.balance.toLocaleString()} €</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 uppercase">Salaire</div>
+                <div className="font-bold">{player.finances.weeklySalary} € / sem</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-500 uppercase">Saison / Sem.</div>
+                <div className="font-bold text-brand-500">S{player.status.season} - W{player.status.week}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex border-b border-slate-800 gap-4 text-sm font-semibold">
+            {[
+              { id: 'dashboard', label: 'Tableau de bord' },
+              { id: 'staff', label: 'Staff Privé' },
+              { id: 'media', label: 'Médias & Rival' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`pb-3 transition ${activeTab === tab.id ? 'border-b-2 border-brand-500 text-brand-500' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === 'dashboard' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase text-slate-400">Attributs</h3>
+                <div className="space-y-3">
+                  {Object.entries(player.attributes.stats).map(([stat, val]) => (
+                    <div key={stat}>
+                      <div className="flex justify-between text-xs mb-1 uppercase font-semibold">
+                        <span className="text-slate-400">{stat}</span>
+                        <span>{val}</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-500 rounded-full" style={{ width: `${val}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-6 md:col-span-2 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-bold uppercase text-slate-400 mb-4">Forme & Mental</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <div className="text-xs text-slate-500 uppercase mb-1">Santé Mentale</div>
+                      <div className="text-2xl font-bold text-sky-400">{player.status.mentalHealth} %</div>
+                    </div>
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <div className="text-xs text-slate-500 uppercase mb-1">Condition Physique</div>
+                      <div className="text-2xl font-bold text-emerald-400">{player.status.physicalCondition} %</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={nextWeek}
+                  className="w-full py-4 bg-gradient-to-r from-brand-500 to-emerald-600 hover:from-brand-600 hover:to-emerald-700 text-slate-950 font-black rounded-xl shadow-lg transition text-lg"
+                >
+                  Avancer À La Semaine Suivante ▶
+                </button>
+
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 h-40 overflow-y-auto space-y-2">
+                  <div className="text-xs font-bold text-slate-500 uppercase mb-2">Derniers Événements</div>
+                  {weekLogs.map((log, idx) => (
+                    <div key={idx} className="text-xs text-slate-300 border-b border-slate-900 pb-1">
+                      {log}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'staff' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { key: 'physicalTrainer', title: 'Préparateur Physique' },
+                { key: 'tacticalTrainer', title: 'Préparateur Technique' },
+                { key: 'mentalCoach', title: 'Coach Mental' },
+                { key: 'chef', title: 'Cuisinier / Nutritionniste' }
+              ].map(group => (
+                <div key={group.key} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                  <h3 className="font-bold text-sm text-brand-500 uppercase">{group.title}</h3>
+                  <div className="space-y-3">
+                    {STAFF_CATALOG[group.key].map((item, idx) => {
+                      const isHired = player.privateStaff[group.key] === idx;
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
+                            isHired ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-slate-200">{item.name}</div>
+                            <div className="text-slate-400">{item.desc}</div>
+                            <div className="text-slate-500 text-[10px]">Coût : {item.cost} € / mois</div>
+                          </div>
+                          <button
+                            disabled={isHired}
+                            onClick={() => hireStaff(group.key, idx)}
+                            className={`px-3 py-2 rounded-lg font-bold ${
+                              isHired ? 'bg-brand-500/20 text-brand-500' : 'bg-slate-800 text-slate-200'
+                            }`}
+                          >
+                            {isHired ? 'Embauché' : 'Engager'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'media' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <h3 className="font-bold text-sm text-red-500 uppercase">Votre Rival Direct</h3>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <div>
+                    <div className="font-bold">{player.rival.name}</div>
+                    <div className="text-xs text-slate-400">{player.rival.club}</div>
+                  </div>
+                  <div className="font-black text-red-500">{player.rival.intensity} %</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+                <h3 className="font-bold text-sm text-sky-500 uppercase">Réputation & Médias</h3>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                  <div className="text-xs text-slate-500 uppercase mb-1">Notoriété</div>
+                  <div className="text-2xl font-bold text-sky-400">{player.status.fame} pts</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
