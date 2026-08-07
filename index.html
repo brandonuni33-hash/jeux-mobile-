@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Football Career RPG</title>
+  <title>Football Career RPG - Choix en Match</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -28,23 +28,43 @@
     ];
 
     const ACADEMY_POOL = [
-      { id: 'bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, coach: { name: 'Marc Vasseur', style: 'Gegenpressing (Intense)', trust: 50 }, expectations: 'Exige une condition physique irréprochable et un pressing haut constant.', targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 } },
-      { id: 'pessac', club: 'US Pessac U15', division: 'Régional 2', salary: 95, coach: { name: 'Antoine Morel', style: 'Jeu de Possession / Tiki-Taka', trust: 60 }, expectations: 'Recherche la précision technique et la discipline tactique sans perte de balle.', targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 } },
-      { id: 'girondins_b', club: 'Girondins B (U15)', division: 'National U15', salary: 220, coach: { name: 'Laurent Blanc', style: 'Contre-Attaque Rapide', trust: 40 }, expectations: 'Très exigeant. Place les joueurs au mérite et baisse la confiance au moindre écart.', targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 } },
-      { id: 'merignac', club: 'SA Mérignac U15', division: 'Régional 1', salary: 130, coach: { name: 'Christophe Galtier', style: 'Bloc Bas & Discipline', trust: 55 }, expectations: 'Met l\'accent sur la rigueur défensive et le respect strict du schéma tactique.', targets: { field: { goals: 8, assists: 6 }, gk: { cleanSheets: 10 }, minRating: 6.7 } },
-      { id: 'stade_bordelais', club: 'Stade Bordelais U15', division: 'National U15', salary: 180, coach: { name: 'Franck Haise', style: 'Jeu Direct & Transition', trust: 45 }, expectations: 'Valorise la rapidité de projection vers l\'avant et le dépassement de soi.', targets: { field: { goals: 12, assists: 7 }, gk: { cleanSheets: 9 }, minRating: 7.0 } },
-      { id: 'libourne', club: 'FC Libourne U15', division: 'Régional 2', salary: 85, coach: { name: 'Julien Stéphan', style: 'Jeu de Position Équilibré', trust: 65 }, expectations: 'Donne de la liberté d\'initiative aux jeunes joueurs motivés.', targets: { field: { goals: 5, assists: 5 }, gk: { cleanSheets: 5 }, minRating: 6.3 } },
-      { id: 'lormont', club: 'US Lormont U15', division: 'Régional 3', salary: 75, coach: { name: 'Karim Benchrif', style: 'Impact Physique & Duel', trust: 70 }, expectations: 'Privilégie le combat physique et la solidarité d\'équipe dans l\'effort.', targets: { field: { goals: 5, assists: 3 }, gk: { cleanSheets: 4 }, minRating: 6.2 } }
+      { id: 'bacalan', club: 'FC Bacalan U15', division: 'Régional 1', salary: 120, coach: { name: 'Marc Vasseur', style: 'Gegenpressing', trust: 50 }, expectations: 'Exige un engagement total.', targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 } },
+      { id: 'pessac', club: 'US Pessac U15', division: 'Régional 2', salary: 95, coach: { name: 'Antoine Morel', style: 'Tiki-Taka', trust: 60 }, expectations: 'Recherche la précision technique.', targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 } },
+      { id: 'girondins_b', club: 'Girondins B (U15)', division: 'National U15', salary: 220, coach: { name: 'Laurent Blanc', style: 'Contre-Attaque', trust: 40 }, expectations: 'Exige la victoire à chaque match.', targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 } }
     ];
 
     const RIVALS_POOL = [
-      { name: 'Enzo Ferrari', club: 'SA Mérignac U15', pos: 'BU', goals: 0, rating: 6.8 },
-      { name: 'Lucas Silva', club: 'Girondins B (U15)', pos: 'MOC', goals: 0, rating: 7.1 },
-      { name: 'Mathéo Dubois', club: 'FC Bacalan U15', pos: 'AG', goals: 0, rating: 6.6 },
-      { name: 'Kylian Mercier', club: 'Stade Bordelais U15', pos: 'BU', goals: 0, rating: 7.0 }
+      { name: 'Enzo Ferrari', club: 'SA Mérignac U15', pos: 'BU', goals: 0 },
+      { name: 'Lucas Silva', club: 'Girondins B (U15)', pos: 'MOC', goals: 0 },
+      { name: 'Mathéo Dubois', club: 'FC Bacalan U15', pos: 'AG', goals: 0 }
     ];
 
-    // État global
+    // Banques d'actions pour le mode match interactif
+    const ACTION_SITUATIONS = [
+      {
+        text: "Tu te retrouves à l'entrée de la surface avec le ballon sur ton bon pied.",
+        choices: [
+          { text: "🎯 Tirer en finesse dans le petit filet", successRate: 0.5, onWin: { goal: 1, ratingDelta: 1.2, log: "Superbe frappe enroulée ! BUT !" }, onLoss: { ratingDelta: -0.4, log: "La frappe passe à côté du cadre." } },
+          { text: "👟 Donner une passe décisive au second poteau", successRate: 0.65, onWin: { assist: 1, ratingDelta: 0.9, log: "Offrande parfaite pour ton coéquipier ! PASSE DÉCISIVE !" }, onLoss: { ratingDelta: -0.3, log: "La passe est interceptée par la défense." } },
+          { text: "⚡ Dribbler le dernier défenseur", successRate: 0.4, onWin: { goal: 1, ratingDelta: 1.5, log: "Dribble éliminatoire magique puis frappe ! BUT MAGNIFIQUE !" }, onLoss: { ratingDelta: -0.6, log: "Tu perds le ballon de manière évitable." } }
+        ]
+      },
+      {
+        text: "Contre-attaque rapide ! Tu as un appel de balle sur l'aile.",
+        choices: [
+          { text: "🚀 Partir en vitesse et repiquer dans l'axe", successRate: 0.55, onWin: { goal: 1, ratingDelta: 1.1, log: "Tu débordes la défense et ajustes le gardien ! BUT !" }, onLoss: { ratingDelta: -0.3, log: "Le défenseur te rattrape à la course." } },
+          { text: "📐 Centrer en première intention", successRate: 0.6, onWin: { assist: 1, ratingDelta: 0.8, log: "Centre millimétré coupé au premier poteau ! PASSE DÉCISIVE !" }, onLoss: { ratingDelta: -0.2, log: "Le centre est trop appuyé." } }
+        ]
+      },
+      {
+        text: "Duel physique intense au milieu de terrain.",
+        choices: [
+          { text: "💪 Imposer ton physique et relancer propre", successRate: 0.7, onWin: { ratingDelta: 0.6, log: "Duel gagné avec autorité et relance propre." }, onLoss: { ratingDelta: -0.5, log: "Faute concédée dans une zone dangereuse." } },
+          { text: "🪄 Faire une feinte de corps pour éliminer", successRate: 0.45, onWin: { ratingDelta: 0.9, log: "Feinte de classe qui mystifie l'adversaire !" }, onLoss: { ratingDelta: -0.4, log: "Perte de balle dangereuse." } }
+        ]
+      }
+    ];
+
     let state = {
       step: 1,
       player: JSON.parse(localStorage.getItem('career_rpg_save')) || null,
@@ -53,81 +73,96 @@
       selectedOffer: null,
       weekLogs: [],
       pressNews: [],
-      rival: RIVALS_POOL[0]
+      rival: RIVALS_POOL[0],
+
+      // État spécifique au match en cours
+      matchState: null
     };
 
     function generateOffers() {
-      const shuffled = [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
-      const count = Math.floor(Math.random() * 3) + 4;
-      return shuffled.slice(0, count);
+      return [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
     }
 
-    function generatePressArticle(matchRating, goalsScored, assistsScored, cleanSheet, playerName) {
-      const rating = parseFloat(matchRating);
-      const rival = state.rival;
-      let news = null;
+    function startMatch() {
+      // Préparation d'une session de match (3 situations d'action)
+      const shuffledSituations = [...ACTION_SITUATIONS].sort(() => 0.5 - Math.random());
+      state.matchState = {
+        currentTurn: 0,
+        totalTurns: 3,
+        situations: shuffledSituations.slice(0, 3),
+        goals: 0,
+        assists: 0,
+        rating: 6.0,
+        logs: []
+      };
+      render();
+    }
 
-      const randomFactor = Math.random();
+    function makeMatchChoice(choiceIndex) {
+      const ms = state.matchState;
+      const sit = ms.situations[ms.currentTurn];
+      const choice = sit.choices[choiceIndex];
 
-      // Article sur les performances du joueur
-      if (rating >= 8.0) {
-        news = {
-          source: 'Sud Ouest Sport',
-          badge: 'À LA UNE 🌟',
-          badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-          title: `${playerName} étincelant ! Le jeune phénomène frappe encore`,
-          text: `Auteur d'une prestation XXL notée ${rating}/10 (${goalsScored > 0 ? goalsScored + ' but(s)' : 'omniprésent dans le jeu'}), ${playerName} attire déjà le regard des recruteurs de la région.`
-        };
-      } else if (goalsScored >= 2) {
-        news = {
-          source: 'L\'Équipe Jeunes',
-          badge: 'PERFORMANCE 🔥',
-          badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-          title: `Doublé magistral pour ${playerName} !`,
-          text: `Rien n'arrête la pépite cette semaine ! Avec deux buts au compteur, ${playerName} confirme qu'il est l'homme en forme de son équipe.`
-        };
-      } else if (rating <= 5.5) {
-        news = {
-          source: 'Actu Foot Régional',
-          badge: 'COUP DE MOU ⚠️',
-          badgeBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-          title: `${playerName} en difficulté lors du dernier match`,
-          text: `Passé à côté de son sujet avec une note de ${rating}/10, le jeune joueur va devoir vite réagir pour conserver la confiance de son entraîneur.`
-        };
-      } else if (randomFactor > 0.5) {
-        // Article axé sur le rival
-        const rivalPerformance = (Math.random() * 3 + 5.5).toFixed(1);
-        const rivalGoals = Math.random() > 0.5 ? 1 : 0;
-        rival.goals += rivalGoals;
+      const success = Math.random() < choice.successRate;
+      const outcome = success ? choice.onWin : choice.onLoss;
 
-        if (rivalGoals > 0) {
-          news = {
-            source: 'Gironde Football Express',
-            badge: 'DUEL DU CHAMPIONNAT ⚔️',
-            badgeBg: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-            title: `Pendant ce temps, ${rival.name} (${rival.club}) fait parler la poudre !`,
-            text: `${rival.name}, le rival direct de ${playerName}, s'est illustré avec un nouveau but décisif. La course au meilleur jeune de la région bat son plein !`
-          };
-        } else {
-          news = {
-            source: 'Foot Amateur Hebdo',
-            badge: 'SUIVI RIVAL 📰',
-            badgeBg: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-            title: `${rival.name} freiné dans sa progression`,
-            text: `Rien n'a fonctionné pour ${rival.name} (${rival.club}) cette semaine avec une note moyenne de ${rivalPerformance}/10. Une occasion rêvée pour ${playerName} de prendre l'avantage.`
-          };
-        }
+      if (outcome.goal) ms.goals += outcome.goal;
+      if (outcome.assist) ms.assists += outcome.assist;
+      ms.rating = Math.max(3.0, Math.min(10.0, ms.rating + outcome.ratingDelta));
+      ms.logs.push(outcome.log);
+
+      ms.currentTurn += 1;
+
+      if (ms.currentTurn >= ms.totalTurns) {
+        finishMatch();
       } else {
-        news = {
-          source: 'Tribune Supporters',
-          badge: 'RÉSEAUX SOCIAUX 📱',
-          badgeBg: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-          title: `Les supporters s'enflamment pour ${playerName}`,
-          text: `"Ce gamin a un potentiel fou !" : Les commentaires élogieux se multiplient sur les réseaux sociaux après les récentes apparitions de ${playerName}.`
-        };
+        render();
+      }
+    }
+
+    function finishMatch() {
+      const p = state.player;
+      const ms = state.matchState;
+
+      p.history.matchs += 1;
+      p.history.goals += ms.goals;
+      p.history.assists += ms.assists;
+
+      const matchRating = ms.rating.toFixed(1);
+      p.status.averageRating = ((parseFloat(p.status.averageRating) * (p.history.matchs - 1) + parseFloat(matchRating)) / p.history.matchs).toFixed(1);
+
+      p.finances.balance += p.contract.salary;
+
+      // Presse (1 chance sur 3)
+      if (Math.random() <= 0.35) {
+        const article = generatePressArticle(matchRating, ms.goals, ms.assists, `${p.identity.firstName} ${p.identity.lastName}`);
+        if (article) state.pressNews.unshift(article);
       }
 
-      return news;
+      // Progression du rival
+      if (Math.random() > 0.5) state.rival.goals += 1;
+
+      p.status.week += 1;
+      if (p.status.week > 52) { p.status.week = 1; p.status.season += 1; p.identity.age += 1; }
+
+      const summaryLog = `S${p.status.season} W${p.status.week} - Match terminé (${matchRating}/10) : ${ms.goals} But(s), ${ms.assists} Passe(s).`;
+      state.weekLogs.unshift(summaryLog);
+
+      localStorage.setItem('career_rpg_save', JSON.stringify(p));
+      state.matchState = null;
+      render();
+    }
+
+    function generatePressArticle(rating, goals, assists, playerName) {
+      const numRating = parseFloat(rating);
+      if (numRating >= 8.0) {
+        return { source: 'Sud Ouest Sport', badge: 'À LA UNE 🌟', badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30', title: `${playerName} magistral !`, text: `Avec une note de ${rating}/10, le jeune talent a crevé l'écran cette semaine.` };
+      } else if (goals >= 2) {
+        return { source: 'L\'Équipe Jeunes', badge: 'PERFORMANCE 🔥', badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', title: `Doublé de ${playerName} !`, text: `Auteur de 2 buts, il a porté son équipe vers la victoire.` };
+      } else if (numRating <= 5.5) {
+        return { source: 'Actu Foot', badge: 'COUP DE MOU ⚠️', badgeBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30', title: `Match difficile pour ${playerName}`, text: `Une prestation timide notée ${rating}/10.` };
+      }
+      return null;
     }
 
     function render() {
@@ -136,292 +171,143 @@
       if (!state.player) {
         if (state.step === 1) {
           app.innerHTML = `
-            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-              <h1 class="text-2xl font-black text-center text-brand-500 uppercase mb-1">Création du Joueur</h1>
-              <p class="text-xs text-center text-slate-400 mb-6">Débutez votre histoire à 14 ans</p>
-
-              <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Prénom</label>
-                    <input id="inp-fn" type="text" value="${state.form.firstName}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"/>
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Nom</label>
-                    <input id="inp-ln" type="text" value="${state.form.lastName}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm focus:border-brand-500 focus:outline-none"/>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Poste</label>
-                  <div class="grid grid-cols-5 gap-2">
-                    ${POSITIONS.map(p => `
-                      <button onclick="setPos('${p}')" class="p-3 rounded-lg border text-xs font-bold ${state.form.position === p ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800 text-slate-400'}">${p}</button>
-                    `).join('')}
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Club de cœur</label>
-                  <select id="sel-club" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 mb-2">
-                    ${POPULAR_CLUBS.map(c => `<option value="${c}" ${state.form.favouriteClub === c ? 'selected' : ''}>${c}</option>`).join('')}
-                  </select>
-                  <input id="inp-custom" type="text" placeholder="Ou autre club..." value="${state.form.customClub}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400"/>
-                </div>
-
-                <button onclick="goToStep2()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-sm uppercase">Voir les offres de contrats ▶</button>
+            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl space-y-4">
+              <h1 class="text-2xl font-black text-center text-brand-500 uppercase">Création du Joueur</h1>
+              <div class="grid grid-cols-2 gap-3">
+                <input id="inp-fn" type="text" value="${state.form.firstName}" class="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm"/>
+                <input id="inp-ln" type="text" value="${state.form.lastName}" class="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm"/>
               </div>
+              <div class="grid grid-cols-5 gap-2">
+                ${POSITIONS.map(p => `<button onclick="setPos('${p}')" class="p-2.5 rounded border text-xs font-bold ${state.form.position === p ? 'bg-brand-500/20 border-brand-500 text-brand-500' : 'bg-slate-950 border-slate-800'}">${p}</button>`).join('')}
+              </div>
+              <button onclick="goToStep2()" class="w-full py-3 bg-brand-500 font-black rounded-xl text-slate-950 uppercase">Suivant ▶</button>
             </div>
           `;
         } else {
-          const isGK = state.form.position === 'GK';
           app.innerHTML = `
-            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
-              <div class="flex justify-between items-center mb-4">
-                <div class="text-xs text-slate-400 uppercase font-bold">Propositions de contrats (${state.availableOffers.length})</div>
-                <button onclick="refreshOffers()" class="text-[10px] text-brand-500 uppercase font-semibold">🔄 Régénérer</button>
-              </div>
-
-              <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            <div class="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
+              <h2 class="text-lg font-bold">Choisir un contrat</h2>
+              <div class="space-y-2">
                 ${state.availableOffers.map(o => `
-                  <div onclick="selectOffer('${o.id}')" class="p-4 rounded-xl border cursor-pointer transition ${state.selectedOffer && state.selectedOffer.id === o.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'}">
-                    <div class="flex justify-between items-start mb-2">
-                      <div>
-                        <div class="font-extrabold text-slate-100">${o.club}</div>
-                        <div class="text-xs text-slate-400">${o.division}</div>
-                      </div>
-                      <div class="text-right">
-                        <span class="text-sm font-black text-brand-500">${o.salary} €</span>
-                        <div class="text-[10px] text-slate-500">/ sem</div>
-                      </div>
-                    </div>
-
-                    <div class="border-t border-slate-800 pt-2 text-xs space-y-1.5">
-                      <div class="flex justify-between"><span class="text-slate-400">Coach :</span><span class="text-slate-200">${o.coach.name}</span></div>
-                      <div class="flex justify-between"><span class="text-slate-400">Tactique :</span><span class="text-amber-400">${o.coach.style}</span></div>
-
-                      <div class="bg-slate-900 p-2.5 rounded border border-slate-800/80 space-y-1">
-                        <div class="text-[10px] font-bold text-slate-300 uppercase">🎯 Attentes du club :</div>
-                        <div class="grid grid-cols-2 gap-2 text-[11px]">
-                          ${isGK ? `
-                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Clean Sheets</span><strong class="text-emerald-400">${o.targets.gk.cleanSheets}</strong></div>
-                          ` : `
-                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Buts attendus</span><strong class="text-emerald-400">${o.targets.field.goals} buts</strong></div>
-                            <div class="bg-slate-950 p-1 rounded text-center"><span class="text-[9px] text-slate-400 block">Passes décisives</span><strong class="text-emerald-400">${o.targets.field.assists} passes</strong></div>
-                          `}
-                          <div class="bg-slate-950 p-1 rounded text-center ${isGK ? '' : 'col-span-2'}"><span class="text-[9px] text-slate-400 block">Note Moyenne</span><strong class="text-amber-400">${o.targets.minRating} / 10</strong></div>
-                        </div>
-                      </div>
-                    </div>
+                  <div onclick="selectOffer('${o.id}')" class="p-4 rounded-xl border cursor-pointer ${state.selectedOffer && state.selectedOffer.id === o.id ? 'bg-brand-500/10 border-brand-500' : 'bg-slate-950 border-slate-800'}">
+                    <div class="font-bold">${o.club}</div>
+                    <div class="text-xs text-slate-400">${o.division} • ${o.salary}€ / sem</div>
                   </div>
                 `).join('')}
               </div>
-
-              <div class="flex gap-2 pt-4">
-                <button onclick="state.step=1; render();" class="w-1/3 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs uppercase">◀ Retour</button>
-                <button onclick="startCareer()" class="w-2/3 py-3 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-xs uppercase">Signer ✍️</button>
-              </div>
+              <button onclick="startCareer()" class="w-full py-3 bg-brand-500 font-black rounded-xl text-slate-950 uppercase">Signer ✍️</button>
             </div>
           `;
         }
       } else {
-        // Dashboard
         const p = state.player;
-        const isGK = p.identity.position === 'GK';
         const latestArticle = state.pressNews[0];
 
+        // Mode MATCH EN COURS
+        if (state.matchState) {
+          const ms = state.matchState;
+          const currentSit = ms.situations[ms.currentTurn];
+
+          app.innerHTML = `
+            <div class="max-w-2xl mx-auto bg-slate-900 border border-brand-500/40 rounded-2xl p-6 space-y-5 shadow-2xl">
+              <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-xs font-black text-brand-500 uppercase">⚡ MATCH EN COURS - Action ${ms.currentTurn + 1} / ${ms.totalTurns}</span>
+                <span class="text-xs bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 font-bold">Note actuelle : <strong class="text-amber-400">${ms.rating.toFixed(1)}</strong></span>
+              </div>
+
+              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-sm font-medium leading-relaxed">
+                ${currentSit.text}
+              </div>
+
+              <div class="space-y-2.5">
+                <div class="text-xs font-bold text-slate-400 uppercase">Fais ton choix :</div>
+                ${currentSit.choices.map((c, idx) => `
+                  <button onclick="makeMatchChoice(${idx})" class="w-full p-3.5 bg-slate-950 hover:bg-brand-500/10 border border-slate-800 hover:border-brand-500 text-left rounded-xl text-xs font-bold transition flex justify-between items-center">
+                    <span>${c.text}</span>
+                    <span class="text-[10px] text-slate-500 font-normal">Chances : ${Math.round(c.successRate * 100)}%</span>
+                  </button>
+                `).join('')}
+              </div>
+
+              ${ms.logs.length > 0 ? `
+                <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-900 text-xs space-y-1">
+                  <div class="text-[10px] text-slate-500 font-bold uppercase">Dernières actions :</div>
+                  ${ms.logs.map(l => `<div class="text-emerald-400 font-medium">• ${l}</div>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+          return;
+        }
+
+        // Mode DASHBOARD STANDARD
         app.innerHTML = `
           <div class="space-y-5">
-            {/* Profil */}
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex justify-between items-center">
               <div>
-                <div class="flex items-center gap-3">
-                  <h2 class="text-2xl font-black">${p.identity.firstName} ${p.identity.lastName}</h2>
-                  <span class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-500 font-bold text-xs">${p.identity.position}</span>
-                </div>
-                <div class="text-xs text-slate-400 mt-1">${p.identity.age} ans • <strong>${p.contract.club}</strong> (${p.contract.division})</div>
-                <div class="text-xs text-rose-400 mt-1">❤️ Club de cœur : ${p.identity.favouriteClub}</div>
+                <h2 class="text-2xl font-black">${p.identity.firstName} ${p.identity.lastName} (${p.identity.position})</h2>
+                <div class="text-xs text-slate-400">${p.contract.club} • ${p.identity.age} ans</div>
               </div>
-
-              <div class="flex gap-4 text-xs bg-slate-950 p-3 rounded-xl border border-slate-800 w-full md:w-auto justify-between">
-                <div><div class="text-slate-500 text-[10px]">SOLDE</div><div class="font-bold text-emerald-400">${p.finances.balance} €</div></div>
-                <div><div class="text-slate-500 text-[10px]">NOTE MOY.</div><div class="font-bold text-amber-400">${p.status.averageRating} / 10</div></div>
-                <div><div class="text-slate-500 text-[10px]">SAISON / SEM.</div><div class="font-bold text-brand-500">S${p.status.season} - W${p.status.week}</div></div>
+              <div class="text-right text-xs">
+                <div class="text-emerald-400 font-bold">${p.finances.balance} €</div>
+                <div class="text-amber-400 font-bold">${p.status.averageRating} / 10</div>
               </div>
             </div>
 
-            {/* Kiosque Presse & Rival */}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">📰 Kiosque de Presse Local</span>
-                  {latestArticle && <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${latestArticle.badgeBg}">${latestArticle.badge}</span>}
+            {/* Kiosque Presse */}
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <div class="text-xs font-bold text-slate-400 uppercase mb-2">📰 Dernier Article de Presse</div>
+              ${latestArticle ? `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                  <div class="text-[10px] text-slate-500 font-bold">${latestArticle.source}</div>
+                  <div class="text-sm font-bold text-slate-200">${latestArticle.title}</div>
+                  <p class="text-xs text-slate-400 mt-1">${latestArticle.text}</p>
                 </div>
-
-                ${latestArticle ? `
-                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <div class="text-[10px] text-slate-500 uppercase font-extrabold">${latestArticle.source}</div>
-                    <h3 class="text-sm font-black text-slate-100">${latestArticle.title}</h3>
-                    <p class="text-xs text-slate-300 leading-relaxed">${latestArticle.text}</p>
-                  </div>
-                ` : `
-                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-500 text-center italic">
-                    Aucun article publié pour le moment. Jouez votre premier match !
-                  </div>
-                `}
-              </div>
-
-              {/* Rival Direct */}
-              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wide">⚔️ Rival Direct</div>
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-2">
-                  <div class="font-extrabold text-slate-200">${state.rival.name}</div>
-                  <div class="text-[11px] text-slate-400">${state.rival.club} (${state.rival.pos})</div>
-                  <div class="border-t border-slate-900 pt-2 flex justify-between">
-                    <span class="text-slate-500">Buts saison :</span>
-                    <strong class="text-emerald-400">${state.rival.goals} buts</strong>
-                  </div>
-                </div>
-              </div>
+              ` : `<div class="text-xs text-slate-500 italic">Pas de presse cette semaine.</div>`}
             </div>
 
-            {/* Staff & Objectifs */}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
-                  <span>Confiance du Coach</span><span class="text-brand-500">${p.contract.coachTrust}%</span>
-                </div>
-                <div class="bg-slate-950 p-3 rounded-xl text-xs space-y-1">
-                  <div>Entraîneur : <strong>${p.contract.coachName}</strong></div>
-                  <div>Style : <strong class="text-amber-400">${p.contract.coachStyle}</strong></div>
-                  <div class="text-slate-400 italic pt-1 border-t border-slate-900 mt-1">"${p.contract.expectations}"</div>
-                </div>
-              </div>
-
-              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <div class="text-xs font-bold text-slate-400 uppercase mb-2">Objectifs Saison</div>
-                <div class="bg-slate-950 p-3 rounded-xl text-xs space-y-1.5">
-                  ${isGK ? `
-                    <div class="flex justify-between"><span class="text-slate-400">Clean Sheets :</span><strong>${p.history.cleanSheets} / ${p.contract.targets.gk.cleanSheets}</strong></div>
-                  ` : `
-                    <div class="flex justify-between"><span class="text-slate-400">Buts :</span><strong>${p.history.goals} / ${p.contract.targets.field.goals}</strong></div>
-                    <div class="flex justify-between"><span class="text-slate-400">Passes d. :</span><strong>${p.history.assists} / ${p.contract.targets.field.assists}</strong></div>
-                  `}
-                  <div class="flex justify-between border-t border-slate-900 pt-1"><span class="text-slate-400">Note requise :</span><strong class="text-amber-400">${p.status.averageRating} / ${p.contract.targets.minRating}</strong></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Match & Journal */}
+            {/* Bouton de lancement de match */}
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <button onclick="nextWeek()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl uppercase">Avancer à la semaine suivante ▶</button>
-              <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-32 overflow-y-auto text-xs space-y-1">
+              <button onclick="startMatch()" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl uppercase text-sm shadow-lg shadow-brand-500/20">
+                ⚽ JOUER LE MATCH DE LA SEMAINE (Choix interactifs) ▶
+              </button>
+
+              <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 h-28 overflow-y-auto text-xs space-y-1">
                 ${state.weekLogs.map(l => `<div class="border-b border-slate-900 pb-1 text-slate-300">${l}</div>`).join('')}
               </div>
             </div>
 
-            <div class="text-center"><button onclick="resetCareer()" class="text-xs text-red-500 underline">Réinitialiser la carrière</button></div>
+            <button onclick="resetCareer()" class="text-xs text-red-500 underline block mx-auto">Réinitialiser la carrière</button>
           </div>
         `;
       }
     }
 
-    // Handlers
-    function setPos(pos) { state.form.position = pos; render(); }
-    
+    function setPos(p) { state.form.position = p; render(); }
     function goToStep2() {
       state.form.firstName = document.getElementById('inp-fn').value || 'Brandon';
       state.form.lastName = document.getElementById('inp-ln').value || 'Le Moan';
-      state.form.favouriteClub = document.getElementById('sel-club').value;
-      state.form.customClub = document.getElementById('inp-custom').value;
-
       state.availableOffers = generateOffers();
       state.selectedOffer = state.availableOffers[0];
       state.step = 2;
       render();
     }
-
-    function refreshOffers() {
-      state.availableOffers = generateOffers();
-      state.selectedOffer = state.availableOffers[0];
-      render();
-    }
-
-    function selectOffer(id) {
-      state.selectedOffer = state.availableOffers.find(o => o.id === id);
-      render();
-    }
-
+    function selectOffer(id) { state.selectedOffer = state.availableOffers.find(o => o.id === id); render(); }
     function startCareer() {
-      const targetClub = state.form.customClub.trim() !== '' ? state.form.customClub.trim() : state.form.favouriteClub;
       state.player = {
-        identity: { firstName: state.form.firstName, lastName: state.form.lastName, age: 14, position: state.form.position, favouriteClub: targetClub },
-        status: { overall: 52, week: 1, season: 1, averageRating: 6.5 },
-        contract: { club: state.selectedOffer.club, division: state.selectedOffer.division, salary: state.selectedOffer.salary, coachName: state.selectedOffer.coach.name, coachStyle: state.selectedOffer.coach.style, coachTrust: state.selectedOffer.coach.trust, expectations: state.selectedOffer.expectations, targets: state.selectedOffer.targets },
+        identity: { firstName: state.form.firstName, lastName: state.form.lastName, age: 14, position: state.form.position },
+        status: { week: 1, season: 1, averageRating: 6.5 },
+        contract: { club: state.selectedOffer.club, division: state.selectedOffer.division, salary: state.selectedOffer.salary },
         finances: { balance: 350 },
-        history: { matchs: 0, goals: 0, assists: 0, cleanSheets: 0 }
+        history: { matchs: 0, goals: 0, assists: 0 }
       };
-
-      // Attribuer un rival qui ne joue pas dans le même club
-      const availableRivals = RIVALS_POOL.filter(r => r.club !== state.selectedOffer.club);
-      state.rival = availableRivals[Math.floor(Math.random() * availableRivals.length)] || RIVALS_POOL[0];
-
       localStorage.setItem('career_rpg_save', JSON.stringify(state.player));
-      state.weekLogs = [`Signature au ${state.selectedOffer.club}. Note requise : ${state.selectedOffer.targets.minRating}/10.`];
+      state.weekLogs = [`Signature au ${state.selectedOffer.club}.`];
       render();
     }
+    function resetCareer() { localStorage.removeItem('career_rpg_save'); state.player = null; state.step = 1; render(); }
 
-    function nextWeek() {
-      const p = state.player;
-      p.finances.balance += p.contract.salary;
-      p.history.matchs += 1;
-
-      const rating = (Math.random() * 3 + 5.5).toFixed(1);
-      p.status.averageRating = ((parseFloat(p.status.averageRating) * (p.history.matchs - 1) + parseFloat(rating)) / p.history.matchs).toFixed(1);
-
-      let goalsThisMatch = 0;
-      let assistsThisMatch = 0;
-      let cleanSheetThisMatch = false;
-
-      let log = `Match (${rating}/10) : `;
-      if (p.identity.position === 'GK') {
-        if (Math.random() > 0.5) { p.history.cleanSheets += 1; cleanSheetThisMatch = true; log += "Clean Sheet !"; } else { log += "Buts encaissés."; }
-      } else {
-        const r = Math.random();
-        if (r > 0.6) { goalsThisMatch = Math.random() > 0.8 ? 2 : 1; p.history.goals += goalsThisMatch; log += `⚽ ${goalsThisMatch} But(s) marqué(s) !`; }
-        else if (r > 0.35) { assistsThisMatch = 1; p.history.assists += 1; log += "👟 Passe décisive !"; }
-        else { log += "Prestation correcte."; }
-      }
-
-      // Génération de l'article de presse
-      const article = generatePressArticle(rating, goalsThisMatch, assistsThisMatch, cleanSheetThisMatch, `${p.identity.firstName} ${p.identity.lastName}`);
-      if (article) {
-        state.pressNews.unshift(article);
-      }
-
-      p.status.week += 1;
-      if (p.status.week > 52) { p.status.week = 1; p.status.season += 1; p.identity.age += 1; }
-
-      localStorage.setItem('career_rpg_save', JSON.stringify(p));
-      state.weekLogs.unshift(`S${p.status.season} W${p.status.week} - ${log}`);
-      render();
-    }
-
-    function resetCareer() {
-      if (confirm("Réinitialiser la carrière ?")) {
-        localStorage.removeItem('career_rpg_save');
-        state.player = null;
-        state.step = 1;
-        state.pressNews = [];
-        render();
-      }
-    }
-
-    // Premier rendu
     render();
   </script>
 </body>
 </html>
-
-
-
