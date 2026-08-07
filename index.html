@@ -46,7 +46,7 @@
       'Bayern Munich'
     ];
 
-    // Pool de clubs formateurs potentiels
+    // Pool de clubs formateurs avec objectifs chiffrés et note moyenne exigiée
     const ACADEMY_POOL = [
       {
         id: 'bacalan',
@@ -54,7 +54,8 @@
         division: 'Régional 1',
         salary: 120,
         coach: { name: 'Marc Vasseur', style: 'Gegenpressing (Intense)', trust: 50 },
-        expectations: 'Exige une condition physique irréprochable et un pressing haut constant.'
+        expectations: 'Exige une condition physique irréprochable et un pressing haut constant.',
+        targets: { field: { goals: 10, assists: 5 }, gk: { cleanSheets: 8 }, minRating: 6.8 }
       },
       {
         id: 'pessac',
@@ -62,7 +63,8 @@
         division: 'Régional 2',
         salary: 95,
         coach: { name: 'Antoine Morel', style: 'Jeu de Possession / Tiki-Taka', trust: 60 },
-        expectations: 'Recherche la précision technique et la discipline tactique sans perte de balle.'
+        expectations: 'Recherche la précision technique et la discipline tactique sans perte de balle.',
+        targets: { field: { goals: 6, assists: 8 }, gk: { cleanSheets: 6 }, minRating: 6.5 }
       },
       {
         id: 'girondins_b',
@@ -70,7 +72,8 @@
         division: 'National U15',
         salary: 220,
         coach: { name: 'Laurent Blanc', style: 'Contre-Attaque Rapide', trust: 40 },
-        expectations: 'Très exigeant. Place les joueurs au mérite et baisse la confiance au moindre écart.'
+        expectations: 'Très exigeant. Place les joueurs au mérite et baisse la confiance au moindre écart.',
+        targets: { field: { goals: 15, assists: 10 }, gk: { cleanSheets: 12 }, minRating: 7.2 }
       },
       {
         id: 'merignac',
@@ -78,7 +81,8 @@
         division: 'Régional 1',
         salary: 130,
         coach: { name: 'Christophe Galtier', style: 'Bloc Bas & Discipline', trust: 55 },
-        expectations: 'Met l\'accent sur la rigueur défensive et le respect strict du schéma tactique.'
+        expectations: 'Met l\'accent sur la rigueur défensive et le respect strict du schéma tactique.',
+        targets: { field: { goals: 8, assists: 6 }, gk: { cleanSheets: 10 }, minRating: 6.7 }
       },
       {
         id: 'stade_bordelais',
@@ -86,7 +90,8 @@
         division: 'National U15',
         salary: 180,
         coach: { name: 'Franck Haise', style: 'Jeu Direct & Transition', trust: 45 },
-        expectations: 'Valorise la rapidité de projection vers l\'avant et le dépassement de soi.'
+        expectations: 'Valorise la rapidité de projection vers l\'avant et le dépassement de soi.',
+        targets: { field: { goals: 12, assists: 7 }, gk: { cleanSheets: 9 }, minRating: 7.0 }
       },
       {
         id: 'libourne',
@@ -94,7 +99,8 @@
         division: 'Régional 2',
         salary: 85,
         coach: { name: 'Julien Stéphan', style: 'Jeu de Position Équilibré', trust: 65 },
-        expectations: 'Donne de la liberté d\'initiative aux jeunes joueurs motivés.'
+        expectations: 'Donne de la liberté d\'initiative aux jeunes joueurs motivés.',
+        targets: { field: { goals: 5, assists: 5 }, gk: { cleanSheets: 5 }, minRating: 6.3 }
       },
       {
         id: 'lormont',
@@ -102,14 +108,14 @@
         division: 'Régional 3',
         salary: 75,
         coach: { name: 'Karim Benchrif', style: 'Impact Physique & Duel', trust: 70 },
-        expectations: 'Privilégie le combat physique et la solidarité d\'équipe dans l\'effort.'
+        expectations: 'Privilégie le combat physique et la solidarity d\'équipe dans l\'effort.',
+        targets: { field: { goals: 5, assists: 3 }, gk: { cleanSheets: 4 }, minRating: 6.2 }
       }
     ];
 
-    // Fonction pour générer entre 4 et 6 offres aléatoires
     function generateOffers() {
       const shuffled = [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
-      const offerCount = Math.floor(Math.random() * 3) + 4; // Génère 4, 5 ou 6
+      const offerCount = Math.floor(Math.random() * 3) + 4; // Génère entre 4 et 6 offres
       return shuffled.slice(0, offerCount);
     }
 
@@ -119,7 +125,7 @@
         return saved ? JSON.parse(saved) : null;
       });
 
-      const [step, setStep] = useState(1); // 1: Profil & Club de cœur, 2: Choix du Contrat
+      const [step, setStep] = useState(1);
       const [form, setForm] = useState({
         firstName: 'Brandon',
         lastName: 'Le Moan',
@@ -132,7 +138,6 @@
       const [selectedOffer, setSelectedOffer] = useState(null);
       const [weekLogs, setWeekLogs] = useState([]);
 
-      // Génération des offres au passage à l'étape 2
       const goToStep2 = () => {
         const offers = generateOffers();
         setAvailableOffers(offers);
@@ -172,7 +177,8 @@
             energy: 100,
             moral: 85,
             week: 1,
-            season: 1
+            season: 1,
+            averageRating: 6.5
           },
           contract: {
             club: selectedOffer.club,
@@ -181,16 +187,17 @@
             coachName: selectedOffer.coach.name,
             coachStyle: selectedOffer.coach.style,
             coachTrust: selectedOffer.coach.trust,
-            expectations: selectedOffer.expectations
+            expectations: selectedOffer.expectations,
+            targets: selectedOffer.targets
           },
           finances: { balance: 350 },
-          history: { matchs: 0, goals: 0, cleanSheets: 0 }
+          history: { matchs: 0, goals: 0, assists: 0, cleanSheets: 0 }
         };
 
         setPlayer(newPlayer);
         setWeekLogs([
           `Saison 1 - Signature officielle au ${selectedOffer.club}. Entraîneur : ${selectedOffer.coach.name}.`,
-          `❤️ Rêve de carrière : Jouer un jour pour le ${targetClub}.`
+          `🎯 Objectif : Note moyenne exigée de ${selectedOffer.targets.minRating}/10.`
         ]);
       };
 
@@ -203,29 +210,36 @@
 
           // Salaire
           updated.finances.balance += updated.contract.weeklySalary;
-
-          // Énergie
           updated.status.energy = Math.min(100, updated.status.energy + 15);
 
-          // Événement de match
+          // Simulation match
           const rand = Math.random();
           updated.history.matchs += 1;
+
+          // Note du match simulée
+          const matchRating = (Math.random() * 3 + 5.5).toFixed(1);
+          const currentAvg = parseFloat(updated.status.averageRating);
+          updated.status.averageRating = ((currentAvg * (updated.history.matchs - 1) + parseFloat(matchRating)) / updated.history.matchs).toFixed(1);
 
           if (updated.identity.position === 'GK') {
             if (rand > 0.5) {
               updated.history.cleanSheets += 1;
               updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 3);
-              logs.push("🧤 Match : Clean Sheet ! L'entraîneur félicite vos réflexes.");
+              logs.push(`🧤 Match (${matchRating}/10) : Clean Sheet ! L'entraîneur félicite vos réflexes.`);
             } else {
-              logs.push("⚽ Match : Buts encaissés. Séance d'analyse vidéo prévue.");
+              logs.push(`⚽ Match (${matchRating}/10) : Buts encaissés.`);
             }
           } else {
-            if (rand > 0.55) {
+            if (rand > 0.6) {
               updated.history.goals += 1;
               updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 4);
-              logs.push("⚽ Match : But décisif inscrit ! L'entraîneur apprécie votre efficacité.");
+              logs.push(`⚽ Match (${matchRating}/10) : But inscrit !`);
+            } else if (rand > 0.35) {
+              updated.history.assists += 1;
+              updated.contract.coachTrust = Math.min(100, updated.contract.coachTrust + 2);
+              logs.push(`👟 Match (${matchRating}/10) : Passe décisive distribuée !`);
             } else {
-              logs.push("🏃 Match : Solide prestation collective sur le terrain.");
+              logs.push(`🏃 Match (${matchRating}/10) : Solide prestation collective.`);
             }
           }
 
@@ -237,7 +251,7 @@
             newWeek = 1;
             newSeason += 1;
             newAge += 1;
-            logs.push(`🎆 Fin de saison ${newSeason - 1} ! Vous avez désormais ${newAge} ans.`);
+            logs.push(`🎆 Fin de saison ${newSeason - 1} ! Vos résultats sont enregistrés.`);
           }
 
           updated.status.week = newWeek;
@@ -257,8 +271,10 @@
         }
       };
 
-      // --- ÉCRAN DE CRÉATION (ÉTAPES 1 & 2) ---
+      // --- CRÉATION JOUEUR ---
       if (!player) {
+        const isGKForm = form.position === 'GK';
+
         return (
           <div className="max-w-xl mx-auto my-8 p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl">
             <h1 className="text-2xl font-black text-center text-brand-500 uppercase tracking-wide mb-1">
@@ -306,7 +322,6 @@
                   </div>
                 </div>
 
-                {/* Choix du Club de Cœur */}
                 <div>
                   <label className="block text-xs font-bold text-slate-400 mb-1 uppercase">Club de Cœur (Rêve ultime)</label>
                   <select
@@ -372,7 +387,7 @@
                         </div>
                       </div>
 
-                      <div className="border-t border-slate-800/80 pt-2 mt-2 space-y-1 text-xs">
+                      <div className="border-t border-slate-800/80 pt-2 mt-2 space-y-2 text-xs">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Entraîneur :</span>
                           <span className="font-semibold text-slate-200">{offer.coach.name}</span>
@@ -381,7 +396,38 @@
                           <span className="text-slate-400">Style Tactique :</span>
                           <span className="font-semibold text-amber-400">{offer.coach.style}</span>
                         </div>
-                        <div className="text-[11px] text-slate-400 italic mt-1 bg-slate-900 p-2 rounded border border-slate-800">
+
+                        {/* Attentes & Objectifs du Club */}
+                        <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800/80 space-y-1.5">
+                          <div className="text-[11px] text-slate-300 font-bold uppercase tracking-wide">
+                            🎯 Objectifs de la saison :
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-[11px]">
+                            {isGKForm ? (
+                              <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
+                                <span className="text-slate-400 block text-[9px] uppercase">Matchs sans but</span>
+                                <strong className="text-emerald-400">{offer.targets.gk.cleanSheets} Clean Sheets</strong>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
+                                  <span className="text-slate-400 block text-[9px] uppercase">Buts attendus</span>
+                                  <strong className="text-emerald-400">{offer.targets.field.goals} buts</strong>
+                                </div>
+                                <div className="bg-slate-950 p-1.5 rounded text-center border border-slate-800">
+                                  <span className="text-slate-400 block text-[9px] uppercase">Passes décisives</span>
+                                  <strong className="text-emerald-400">{offer.targets.field.assists} passes</strong>
+                                </div>
+                              </>
+                            )}
+                            <div className={`bg-slate-950 p-1.5 rounded text-center border border-slate-800 ${isGKForm ? '' : 'col-span-2'}`}>
+                              <span className="text-slate-400 block text-[9px] uppercase">Note Moyenne exigée</span>
+                              <strong className="text-amber-400">{offer.targets.minRating} / 10</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-400 italic">
                           "{offer.expectations}"
                         </div>
                       </div>
@@ -409,7 +455,9 @@
         );
       }
 
-      // --- ÉCRAN PRINCIPAL DU JEU ---
+      // --- TABLEAU DE BORD PRINCIPAL ---
+      const isGK = player.identity.position === 'GK';
+
       return (
         <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
           {/* En-tête profil */}
@@ -435,8 +483,8 @@
                 <div className="font-bold text-emerald-400">{player.finances.balance} €</div>
               </div>
               <div>
-                <div className="text-slate-500 uppercase text-[10px]">Salaire</div>
-                <div className="font-bold">{player.contract.weeklySalary} € / sem</div>
+                <div className="text-slate-500 uppercase text-[10px]">Note Moyenne</div>
+                <div className="font-bold text-amber-400">{player.status.averageRating} / 10</div>
               </div>
               <div>
                 <div className="text-slate-500 uppercase text-[10px]">Saison / Sem.</div>
@@ -445,27 +493,44 @@
             </div>
           </div>
 
-          {/* Relation Entraîneur */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <div className="text-xs font-bold text-slate-400 uppercase mb-3 flex justify-between items-center">
-              <span>Relation & Confiance de l'Entraîneur</span>
-              <span className="text-brand-500 font-bold">{player.contract.coachTrust} %</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Relation Entraîneur & Objectifs Saison */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="text-xs font-bold text-slate-400 uppercase flex justify-between items-center">
+                <span>Relation avec le Staff</span>
+                <span className="text-brand-500 font-bold">{player.contract.coachTrust} %</span>
+              </div>
+
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-1">
                 <div><span className="text-slate-500">Entraîneur :</span> <strong className="text-slate-200">{player.contract.coachName}</strong></div>
                 <div><span className="text-slate-500">Style Tactique :</span> <strong className="text-amber-400">{player.contract.coachStyle}</strong></div>
                 <div className="text-slate-400 italic pt-1 border-t border-slate-900 mt-2">"{player.contract.expectations}"</div>
               </div>
+            </div>
 
-              <div className="flex flex-col justify-center bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-                <div className="text-[10px] text-slate-500 uppercase mb-1">Jauge de Confiance</div>
-                <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 via-amber-500 to-emerald-500 transition-all duration-300"
-                    style={{ width: `${player.contract.coachTrust}%` }}
-                  ></div>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="text-xs font-bold text-slate-400 uppercase">Objectifs de la Saison</div>
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-2">
+                {isGK ? (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400">Matchs sans but (Clean Sheets)</span>
+                    <span className="font-bold text-slate-200">{player.history.cleanSheets} / {player.contract.targets.gk.cleanSheets}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Buts à marquer</span>
+                      <span className="font-bold text-slate-200">{player.history.goals} / {player.contract.targets.field.goals}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Passes décisives</span>
+                      <span className="font-bold text-slate-200">{player.history.assists} / {player.contract.targets.field.assists}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-center border-t border-slate-900 pt-2">
+                  <span className="text-slate-400">Note moyenne requise</span>
+                  <span className="font-bold text-amber-400">{player.status.averageRating} / {player.contract.targets.minRating}</span>
                 </div>
               </div>
             </div>
@@ -474,22 +539,28 @@
           {/* Actions & Progression */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <h3 className="text-xs font-bold uppercase text-slate-400">Statistiques de Carrière</h3>
+              <h3 className="text-xs font-bold uppercase text-slate-400">Bilan Carrière</h3>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between border-b border-slate-800 pb-1.5">
                   <span className="text-slate-400">Matchs joués</span>
                   <span className="font-bold">{player.history.matchs}</span>
                 </div>
-                {player.identity.position === 'GK' ? (
+                {isGK ? (
                   <div className="flex justify-between border-b border-slate-800 pb-1.5">
                     <span className="text-slate-400">Clean Sheets</span>
                     <span className="font-bold text-emerald-400">{player.history.cleanSheets}</span>
                   </div>
                 ) : (
-                  <div className="flex justify-between border-b border-slate-800 pb-1.5">
-                    <span className="text-slate-400">Buts marqués</span>
-                    <span className="font-bold text-emerald-400">{player.history.goals}</span>
-                  </div>
+                  <>
+                    <div className="flex justify-between border-b border-slate-800 pb-1.5">
+                      <span className="text-slate-400">Buts</span>
+                      <span className="font-bold text-emerald-400">{player.history.goals}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-800 pb-1.5">
+                      <span className="text-slate-400">Passes décisives</span>
+                      <span className="font-bold text-emerald-400">{player.history.assists}</span>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -526,4 +597,5 @@
   </script>
 </body>
 </html>
+
 
