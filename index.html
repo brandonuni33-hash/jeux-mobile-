@@ -37,6 +37,13 @@
       { id: 'lormont', club: 'US Lormont U15', division: 'Régional 3', salary: 75, coach: { name: 'Karim Benchrif', style: 'Impact Physique & Duel', trust: 70 }, expectations: 'Privilégie le combat physique et la solidarité d\'équipe dans l\'effort.', targets: { field: { goals: 5, assists: 3 }, gk: { cleanSheets: 4 }, minRating: 6.2 } }
     ];
 
+    const RIVALS_POOL = [
+      { name: 'Enzo Ferrari', club: 'SA Mérignac U15', pos: 'BU', goals: 0, rating: 6.8 },
+      { name: 'Lucas Silva', club: 'Girondins B (U15)', pos: 'MOC', goals: 0, rating: 7.1 },
+      { name: 'Mathéo Dubois', club: 'FC Bacalan U15', pos: 'AG', goals: 0, rating: 6.6 },
+      { name: 'Kylian Mercier', club: 'Stade Bordelais U15', pos: 'BU', goals: 0, rating: 7.0 }
+    ];
+
     // État global
     let state = {
       step: 1,
@@ -44,13 +51,83 @@
       form: { firstName: 'Brandon', lastName: 'Le Moan', position: 'BU', favouriteClub: 'FC Girondins de Bordeaux', customClub: '' },
       availableOffers: [],
       selectedOffer: null,
-      weekLogs: []
+      weekLogs: [],
+      pressNews: [],
+      rival: RIVALS_POOL[0]
     };
 
     function generateOffers() {
       const shuffled = [...ACADEMY_POOL].sort(() => 0.5 - Math.random());
-      const count = Math.floor(Math.random() * 3) + 4; // 4 à 6 offres
+      const count = Math.floor(Math.random() * 3) + 4;
       return shuffled.slice(0, count);
+    }
+
+    function generatePressArticle(matchRating, goalsScored, assistsScored, cleanSheet, playerName) {
+      const rating = parseFloat(matchRating);
+      const rival = state.rival;
+      let news = null;
+
+      const randomFactor = Math.random();
+
+      // Article sur les performances du joueur
+      if (rating >= 8.0) {
+        news = {
+          source: 'Sud Ouest Sport',
+          badge: 'À LA UNE 🌟',
+          badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+          title: `${playerName} étincelant ! Le jeune phénomène frappe encore`,
+          text: `Auteur d'une prestation XXL notée ${rating}/10 (${goalsScored > 0 ? goalsScored + ' but(s)' : 'omniprésent dans le jeu'}), ${playerName} attire déjà le regard des recruteurs de la région.`
+        };
+      } else if (goalsScored >= 2) {
+        news = {
+          source: 'L\'Équipe Jeunes',
+          badge: 'PERFORMANCE 🔥',
+          badgeBg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+          title: `Doublé magistral pour ${playerName} !`,
+          text: `Rien n'arrête la pépite cette semaine ! Avec deux buts au compteur, ${playerName} confirme qu'il est l'homme en forme de son équipe.`
+        };
+      } else if (rating <= 5.5) {
+        news = {
+          source: 'Actu Foot Régional',
+          badge: 'COUP DE MOU ⚠️',
+          badgeBg: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+          title: `${playerName} en difficulté lors du dernier match`,
+          text: `Passé à côté de son sujet avec une note de ${rating}/10, le jeune joueur va devoir vite réagir pour conserver la confiance de son entraîneur.`
+        };
+      } else if (randomFactor > 0.5) {
+        // Article axé sur le rival
+        const rivalPerformance = (Math.random() * 3 + 5.5).toFixed(1);
+        const rivalGoals = Math.random() > 0.5 ? 1 : 0;
+        rival.goals += rivalGoals;
+
+        if (rivalGoals > 0) {
+          news = {
+            source: 'Gironde Football Express',
+            badge: 'DUEL DU CHAMPIONNAT ⚔️',
+            badgeBg: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            title: `Pendant ce temps, ${rival.name} (${rival.club}) fait parler la poudre !`,
+            text: `${rival.name}, le rival direct de ${playerName}, s'est illustré avec un nouveau but décisif. La course au meilleur jeune de la région bat son plein !`
+          };
+        } else {
+          news = {
+            source: 'Foot Amateur Hebdo',
+            badge: 'SUIVI RIVAL 📰',
+            badgeBg: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            title: `${rival.name} freiné dans sa progression`,
+            text: `Rien n'a fonctionné pour ${rival.name} (${rival.club}) cette semaine avec une note moyenne de ${rivalPerformance}/10. Une occasion rêvée pour ${playerName} de prendre l'avantage.`
+          };
+        }
+      } else {
+        news = {
+          source: 'Tribune Supporters',
+          badge: 'RÉSEAUX SOCIAUX 📱',
+          badgeBg: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+          title: `Les supporters s'enflamment pour ${playerName}`,
+          text: `"Ce gamin a un potentiel fou !" : Les commentaires élogieux se multiplient sur les réseaux sociaux après les récentes apparitions de ${playerName}.`
+        };
+      }
+
+      return news;
     }
 
     function render() {
@@ -92,7 +169,7 @@
                   <input id="inp-custom" type="text" placeholder="Ou autre club..." value="${state.form.customClub}" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400"/>
                 </div>
 
-                <button onclick="goToStep2()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-sm uppercase">Voir les offres (4 à 6) ▶</button>
+                <button onclick="goToStep2()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl text-sm uppercase">Voir les offres de contrats ▶</button>
               </div>
             </div>
           `;
@@ -151,8 +228,11 @@
         // Dashboard
         const p = state.player;
         const isGK = p.identity.position === 'GK';
+        const latestArticle = state.pressNews[0];
+
         app.innerHTML = `
           <div class="space-y-5">
+            {/* Profil */}
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
                 <div class="flex items-center gap-3">
@@ -170,6 +250,42 @@
               </div>
             </div>
 
+            {/* Kiosque Presse & Rival */}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">📰 Kiosque de Presse Local</span>
+                  {latestArticle && <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${latestArticle.badgeBg}">${latestArticle.badge}</span>}
+                </div>
+
+                ${latestArticle ? `
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <div class="text-[10px] text-slate-500 uppercase font-extrabold">${latestArticle.source}</div>
+                    <h3 class="text-sm font-black text-slate-100">${latestArticle.title}</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">${latestArticle.text}</p>
+                  </div>
+                ` : `
+                  <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-500 text-center italic">
+                    Aucun article publié pour le moment. Jouez votre premier match !
+                  </div>
+                `}
+              </div>
+
+              {/* Rival Direct */}
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wide">⚔️ Rival Direct</div>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs space-y-2">
+                  <div class="font-extrabold text-slate-200">${state.rival.name}</div>
+                  <div class="text-[11px] text-slate-400">${state.rival.club} (${state.rival.pos})</div>
+                  <div class="border-t border-slate-900 pt-2 flex justify-between">
+                    <span class="text-slate-500">Buts saison :</span>
+                    <strong class="text-emerald-400">${state.rival.goals} buts</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Staff & Objectifs */}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                 <div class="text-xs font-bold text-slate-400 uppercase mb-2 flex justify-between">
@@ -196,6 +312,7 @@
               </div>
             </div>
 
+            {/* Match & Journal */}
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
               <button onclick="nextWeek()" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-slate-950 font-black rounded-xl uppercase">Avancer à la semaine suivante ▶</button>
               <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-32 overflow-y-auto text-xs space-y-1">
@@ -209,7 +326,7 @@
       }
     }
 
-    // Gestionnaires d'événements
+    // Handlers
     function setPos(pos) { state.form.position = pos; render(); }
     
     function goToStep2() {
@@ -244,6 +361,11 @@
         finances: { balance: 350 },
         history: { matchs: 0, goals: 0, assists: 0, cleanSheets: 0 }
       };
+
+      // Attribuer un rival qui ne joue pas dans le même club
+      const availableRivals = RIVALS_POOL.filter(r => r.club !== state.selectedOffer.club);
+      state.rival = availableRivals[Math.floor(Math.random() * availableRivals.length)] || RIVALS_POOL[0];
+
       localStorage.setItem('career_rpg_save', JSON.stringify(state.player));
       state.weekLogs = [`Signature au ${state.selectedOffer.club}. Note requise : ${state.selectedOffer.targets.minRating}/10.`];
       render();
@@ -257,14 +379,24 @@
       const rating = (Math.random() * 3 + 5.5).toFixed(1);
       p.status.averageRating = ((parseFloat(p.status.averageRating) * (p.history.matchs - 1) + parseFloat(rating)) / p.history.matchs).toFixed(1);
 
+      let goalsThisMatch = 0;
+      let assistsThisMatch = 0;
+      let cleanSheetThisMatch = false;
+
       let log = `Match (${rating}/10) : `;
       if (p.identity.position === 'GK') {
-        if (Math.random() > 0.5) { p.history.cleanSheets += 1; log += "Clean Sheet !"; } else { log += "Buts encaissés."; }
+        if (Math.random() > 0.5) { p.history.cleanSheets += 1; cleanSheetThisMatch = true; log += "Clean Sheet !"; } else { log += "Buts encaissés."; }
       } else {
         const r = Math.random();
-        if (r > 0.6) { p.history.goals += 1; log += "⚽ But marqué !"; }
-        else if (r > 0.35) { p.history.assists += 1; log += "👟 Passe décisive !"; }
+        if (r > 0.6) { goalsThisMatch = Math.random() > 0.8 ? 2 : 1; p.history.goals += goalsThisMatch; log += `⚽ ${goalsThisMatch} But(s) marqué(s) !`; }
+        else if (r > 0.35) { assistsThisMatch = 1; p.history.assists += 1; log += "👟 Passe décisive !"; }
         else { log += "Prestation correcte."; }
+      }
+
+      // Génération de l'article de presse
+      const article = generatePressArticle(rating, goalsThisMatch, assistsThisMatch, cleanSheetThisMatch, `${p.identity.firstName} ${p.identity.lastName}`);
+      if (article) {
+        state.pressNews.unshift(article);
       }
 
       p.status.week += 1;
@@ -280,6 +412,7 @@
         localStorage.removeItem('career_rpg_save');
         state.player = null;
         state.step = 1;
+        state.pressNews = [];
         render();
       }
     }
